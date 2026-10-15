@@ -19,3 +19,4 @@
 | 2026-10-16 | Store label content/revision snapshots and generate QR with QRCoder | Keeps reprint history stable after inventory movements; output remains local preview until a real printer adapter is configured. |
 | 2026-10-16 | Group reports by UOM and withhold OEE | No mixed-unit totals or inferred industrial timing; trace completeness is explicit for bounded graphs/lists. |
 | 2026-10-16 | Persist development Data Protection keys in an API-owned named volume | Reduces session-key loss on container recreation; encryption-at-rest governance remains a production concern. |
+| 2026-10-16 | User requests final phase commit message `Next Phase` and Git push after development | Persist the requested message and push authorization. GitHub HTTP403 remains an authentication/authorization blocker; report it accurately and preserve unpushed commits. This does not mark the advanced MES backlog complete. |

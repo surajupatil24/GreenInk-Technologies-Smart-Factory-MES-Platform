@@ -9,3 +9,5 @@ Use a modular monolith and PostgreSQL. Enforce tenant and plant scope on every r
 Implement demonstrable vertical slices. Never label placeholders or unexecuted checks complete. Update status, decisions, and backlog after each change; record exact validation commands and blockers. Do not introduce Redis, RabbitMQ, or other infrastructure without an evidenced requirement. Do not automatically publish, merge, or deploy externally.
 
 Use isolated, nonconflicting file ownership when delegating work. Do not run competing agents against the same files.
+
+The user requests the phase-ending commit message `Next Phase` and has authorized pushing completed development to the connected Git repository. Preserve that preference across sessions. Use normal fast-forward pushes; do not force-push or claim synchronization when GitHub rejects authorization. Keep any unpushed work in local commits and a verified Git bundle when necessary.
