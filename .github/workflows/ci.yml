@@ -1,0 +1,63 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: greenink
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-ci-only
+          POSTGRES_DB: postgres
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U greenink"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      GREENINK_TEST_DATABASE: Host=localhost;Port=5432;Database=postgres;Username=greenink;Password=${{ github.run_id }}-${{ github.run_attempt }}-ci-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore tests/GreenInk.Api.Tests.csproj
+      - run: dotnet build tests/GreenInk.Api.Tests.csproj --no-restore --configuration Release
+      - run: dotnet test tests/GreenInk.Api.Tests.csproj --no-build --configuration Release --logger trx
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm --prefix apps/web ci
+      - run: npx --prefix apps/web playwright install --with-deps chromium
+      - name: Start isolated development API
+        shell: bash
+        run: |
+          test_password="Aa1$(openssl rand -hex 24)"
+          echo "GREENINK_E2E_PASSWORD=$test_password" >> "$GITHUB_ENV"
+          echo "GREENINK_E2E_EMAIL=ci@example.invalid" >> "$GITHUB_ENV"
+          ConnectionStrings__Database="$GREENINK_TEST_DATABASE" Bootstrap__Email=ci@example.invalid Bootstrap__Password="$test_password" ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5080 dotnet run --project apps/api/GreenInk.Api.csproj --configuration Release --no-build --no-launch-profile > /tmp/greenink-api.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:5080/health/ready; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/greenink-api.log
+          exit 1
+      - run: npm --prefix apps/web run test:e2e
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run build

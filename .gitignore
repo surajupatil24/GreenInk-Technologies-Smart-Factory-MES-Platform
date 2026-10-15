@@ -60,3 +60,16 @@ typings/
 # next.js build output
 .next
 package-lock.json
+# Green Ink foundation
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+infrastructure/.env
+*.dump
+TestResults/
+**/playwright-report/
+**/test-results/
+
+*.tsbuildinfo
+!apps/web/package-lock.json
