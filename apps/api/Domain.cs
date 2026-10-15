@@ -65,8 +65,22 @@ public class FactoryDb(DbContextOptions<FactoryDb> options) : DbContext(options)
     public DbSet<UserPlant> UserPlants => Set<UserPlant>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        if (
+            ChangeTracker
+                .Entries<StockMovement>()
+                .Any(e => e.State is EntityState.Modified or EntityState.Deleted)
+        )
+            throw new InvalidOperationException(
+                "Stock ledger entries are immutable. Post a correction movement instead."
+            );
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder b)
     {
+        OperationsModel.Configure(b);
         b.Entity<UserSession>().HasIndex(x => x.ExpiresAt);
         b.Entity<Tenant>().HasIndex(x => x.Code).IsUnique();
         b.Entity<Plant>().HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
