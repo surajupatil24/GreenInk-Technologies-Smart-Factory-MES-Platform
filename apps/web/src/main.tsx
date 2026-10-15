@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import "./styles.css";
+import { Operations, OperationalSummary } from "./Operations";
 type User = {
   id: string;
   email: string;
@@ -271,7 +272,7 @@ function App() {
             >
               <Icon size={18} />
               <span>{name}</span>
-              {path && <span className="nav-dot" title="Planned module" />}
+              {path && <span className="nav-dot" aria-hidden="true" />}
             </NavLink>
           ))}
           {["PlatformAdmin", "TenantAdmin"].includes(user.role) && (
@@ -409,27 +410,18 @@ function App() {
             />
             {modules
               .filter((m) => m[0])
-              .map(([path, name, Icon]) => (
+              .map(([path, name]) => (
                 <Route
                   key={path}
                   path={`/${path}`}
                   element={
-                    <section>
-                      <span className="eyebrow">PRODUCT ROADMAP</span>
-                      <h1>{name}</h1>
-                      <div className="empty card">
-                        <Icon size={42} />
-                        <h2>This module is planned</h2>
-                        <p>
-                          {name} workflows will be delivered in a later
-                          milestone. No operational transactions are available
-                          here yet.
-                        </p>
-                        <NavLink to="/" className="text-link">
-                          Return to Command Center →
-                        </NavLink>
-                      </div>
-                    </section>
+                    <Operations
+                      module={path}
+                      name={name}
+                      plant={plant}
+                      plants={availablePlants}
+                      role={user.role}
+                    />
                   }
                 />
               ))}
@@ -544,6 +536,7 @@ function DashboardView({
           );
         })}
       </section>
+      <OperationalSummary plantId={plant} />
       <div className="dashboard-grid">
         <section className="card">
           <div className="card-heading">
@@ -604,25 +597,26 @@ function DashboardView({
               <span className="pending-icon">
                 <Activity size={14} />
               </span>
-              Manufacturing workflows<span className="planned">Planned</span>
+              Manufacturing core workflows
+              <span className="ready">Available</span>
             </div>
           </div>
           <div className="info-note">
-            Operational KPIs will appear as production modules and real factory
-            data become available.
+            Reports use real plant transactions. Advanced OEE and equipment
+            telemetry remain on the roadmap.
           </div>
         </section>
       </div>
       <section className="roadmap">
         <div>
-          <span className="eyebrow">UP NEXT · MILESTONE 2</span>
-          <h2>From receiving to put-away.</h2>
+          <span className="eyebrow">FUNCTIONAL MANUFACTURING CORE</span>
+          <h2>From receipt to production and dispatch.</h2>
           <p>
-            Inbound workflows will connect purchase orders, goods receipt,
-            quality holds, batches, and pallet labels.
+            Manage purchase orders, receipts, quality, inventory, production,
+            and shipments. Advanced workflows remain under development.
           </p>
         </div>
-        <span className="badge subtle">In development roadmap</span>
+        <span className="badge subtle">Core transactions available</span>
       </section>
     </>
   );
