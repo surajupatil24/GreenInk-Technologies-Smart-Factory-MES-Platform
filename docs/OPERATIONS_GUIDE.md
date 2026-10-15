@@ -93,3 +93,11 @@ Release/cancel use state-based retry safety; integration creation uses scoped ex
 | Platform/hardening | Existing scoped identities, sessions, audit and local runtime | SSO/MFA, fine-grained custom roles, full pagination, observability/retention, load/security/accessibility tests, production recovery/UAT and approved deployment |
 
 Milestones 2–7 therefore have connected core slices; they are not fully completed milestones. Complete missing acceptance evidence and resolve defects before expanding each workflow. Maintain the original requirements as the scope reference rather than reducing them to this table's implemented subset.
+
+## Saved BOM and completion readiness
+
+Select a released order in Material Preparation or Complete production to view its **saved** BOM, not the default values in the new-order form. The read-only endpoint `GET /api/operations/production-orders/{id}/requirements?plantId=...` returns planned output and, per raw material/UOM, required, active reserved, issued, still-to-reserve, still-to-issue and released unexpired available quantities. It uses a consistent database snapshot and the same plant authorization as posting. Aggregations cover all posted rows rather than the bounded list views.
+
+The source-pallet picker shows only released, unexpired raw materials still required by that order. Active reservations offered for issue/cancel follow the selected order. Reservation is not issue: when Still to reserve is zero but Still to issue is positive, issue the existing reservations.
+
+Completion closes the entire order. The button stays disabled until all saved BOM quantities have been issued and good output plus **actual** scrap equals planned output. Partial confirmations are not implemented. Do not invent scrap to reconcile a short production run. For example, planned25 does not accept good15 + scrap0; good24 + actual scrap1 accounts for25, but still requires all saved raw-material quantities issued. The BOM raw quantities are independent of the finished output quantity. No schema migration or alteration of existing order/stock records is required by this visibility improvement.

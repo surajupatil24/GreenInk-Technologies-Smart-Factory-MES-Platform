@@ -574,6 +574,7 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 app.MapInboundInventory();
 app.MapExecution();
+app.MapOrderReadiness();
 app.MapInsights();
 app.Run();
 static ClaimsPrincipal SessionPrincipal(User u, Guid sessionId) =>

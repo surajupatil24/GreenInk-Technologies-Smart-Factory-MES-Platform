@@ -101,3 +101,11 @@ Labels are local text/QR previews, integrations validate local JSON, and OEE is 
 ### Git handoff
 
 Operational changes are committed on `mes-operations`. Cloud push to GitHub main was attempted and rejected HTTP403 by GitHub repository authorization. Remote main remains the verified `2b2ca82` foundation/branding baseline. A verified `GreenInk-Operations.bundle` contains the complete new commit chain for import and push using the user's local Git credentials; see GIT_SYNC.md. No force push, production deployment or private configuration transfer occurred.
+
+## Saved BOM guidance fix — 2026-10-16
+
+Resolved the user-visible reservation/completion troubleshooting gap. Material Preparation and Production now display selected-order saved BOM readiness with required/reserved/issued/still-needed quantities and UOM. Eligible source pallets and reservation selections follow the order; held/expired/unneeded raw stock is not offered. Completion checks material readiness and planned-output arithmetic before enabling submission. Backend errors identify the remaining raw-material quantity or planned output; removed the blanket retry hint from business-validation errors. Partial completion remains unsupported; existing saved data and validation rules are preserved.
+
+Validation: Release PostgreSQL/API suite **19 passed,0failed,0skipped**; TypeScript/Vite production build passed; both real browser tests passed (**2/2,34s**) against the updated API, including blocked-before-issue, live reservation/issue summary updates and mismatched-output blocking. No new migration. Existing full-lifecycle tests still pass.
+
+GitHub main was directly verified at `94ec56e` before this change. This update is committed with the requested `Next Phase` message. Cloud pushes remain subject to the existing GitHub write-access denial; the prepared incremental handoff is `GreenInk-BOM-Guidance.bundle` if direct push is rejected. Rebuild **API and web** after updating, retain `.env` and volumes.

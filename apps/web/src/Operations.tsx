@@ -23,6 +23,8 @@ type FormProps = {
   children?: ReactNode;
   extra?: () => Record<string, unknown>;
   note?: string;
+  onValuesChange?: (values: Record<string, string>) => void;
+  blockedReason?: string;
 };
 export async function operationApi<T>(
   endpoint: string,
@@ -56,6 +58,8 @@ function CommandForm({
   children,
   extra,
   note,
+  onValuesChange,
+  blockedReason,
 }: FormProps) {
   const client = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -103,7 +107,17 @@ function CommandForm({
     <section className="card operation-form">
       <h2>{title}</h2>
       {note && <p className="form-note">{note}</p>}
-      <form onSubmit={submit}>
+      <form
+        onSubmit={submit}
+        onChange={(event) => {
+          const values = new FormData(event.currentTarget);
+          onValuesChange?.(
+            Object.fromEntries(
+              fields.map((f) => [f.key, String(values.get(f.key) ?? "")]),
+            ),
+          );
+        }}
+      >
         <fieldset className="operation-fields" disabled={disabled || busy}>
           {fields.map((f) => (
             <label key={f.key}>
@@ -191,7 +205,7 @@ function CommandForm({
         )}
         {error && (
           <p role="alert" className="error">
-            {error} Retry unchanged input to reuse the command identifier.
+            {error}
           </p>
         )}
         {success && (
@@ -199,7 +213,15 @@ function CommandForm({
             {success}
           </p>
         )}
-        <button className="primary" disabled={busy || disabled}>
+        {blockedReason && (
+          <p className="form-note" role="status">
+            {blockedReason}
+          </p>
+        )}
+        <button
+          className="primary"
+          disabled={busy || disabled || !!blockedReason}
+        >
           {busy ? "Saving…" : title}
         </button>
       </form>
@@ -351,6 +373,100 @@ export function Operations({
     </>
   );
 }
+type RequirementStatus = {
+  materialId: string;
+  code: string;
+  name: string;
+  uom: string;
+  requiredQuantity: number;
+  reservedQuantity: number;
+  issuedQuantity: number;
+  toReserve: number;
+  toIssue: number;
+  availableQuantity: number;
+};
+type OrderStatus = {
+  orderId: string;
+  number: string;
+  status: string;
+  plannedQuantity: number;
+  completedQuantity: number;
+  outputUom: string;
+  canComplete: boolean;
+  requirements: RequirementStatus[];
+};
+function ReadinessSummary({
+  order,
+  pending,
+  error,
+}: {
+  order?: OrderStatus;
+  pending: boolean;
+  error?: string;
+}) {
+  if (pending) return <p role="status">Loading saved BOM…</p>;
+  if (error)
+    return (
+      <p role="alert" className="error">
+        {error}
+      </p>
+    );
+  if (!order)
+    return (
+      <p className="form-note">
+        Select a production order to view its saved requirements.
+      </p>
+    );
+  return (
+    <div className="saved-bom" aria-label={`Saved BOM for ${order.number}`}>
+      <h3>Saved BOM · {order.number}</h3>
+      <p>
+        Planned output:{" "}
+        <strong>
+          {order.plannedQuantity} {order.outputUom}
+        </strong>
+        . Raw-material quantities below are for the entire order.
+      </p>
+      {order.requirements.map((line) => (
+        <article className="saved-bom-material" key={line.materialId}>
+          <h4>
+            {line.code} · {line.name}
+          </h4>
+          <dl>
+            {[
+              ["Required", line.requiredQuantity],
+              ["Reserved, awaiting issue", line.reservedQuantity],
+              ["Already issued", line.issuedQuantity],
+              ["Still to reserve", line.toReserve],
+              ["Still to issue", line.toIssue],
+              ["Released stock available", line.availableQuantity],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>
+                  {value} {line.uom}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {line.toIssue === 0 ? (
+            <p className="success">Material requirement fully issued.</p>
+          ) : line.toReserve === 0 ? (
+            <p className="form-note">
+              Issue the existing reservations; no additional reservation is
+              needed.
+            </p>
+          ) : (
+            <p className="form-note">
+              Reserve {line.toReserve} {line.uom} more, then issue the
+              reservations.
+            </p>
+          )}
+        </article>
+      ))}
+    </div>
+  );
+}
 function PlantOperations({
   module,
   plantId,
@@ -384,6 +500,50 @@ function PlantOperations({
     role,
   );
   const [tab, setTab] = useState("workflow");
+  const [prepOrderId, setPrepOrderId] = useState("");
+  const [completion, setCompletion] = useState({
+    targetId: "",
+    quantity: "",
+    scrapQuantity: "0",
+  });
+  const preparation = useQuery({
+    queryKey: ["operations", plantId, "requirements", prepOrderId],
+    queryFn: () =>
+      operationApi<OrderStatus>(
+        `production-orders/${prepOrderId}/requirements?plantId=${plantId}`,
+      ),
+    enabled: !!prepOrderId,
+    retry: false,
+  });
+  const readiness = useQuery({
+    queryKey: ["operations", plantId, "requirements", completion.targetId],
+    queryFn: () =>
+      operationApi<OrderStatus>(
+        `production-orders/${completion.targetId}/requirements?plantId=${plantId}`,
+      ),
+    enabled: !!completion.targetId,
+    retry: false,
+  });
+  const outputTotal =
+    Math.round(
+      (Number(completion.quantity || 0) +
+        Number(completion.scrapQuantity || 0)) *
+        1e6,
+    ) / 1e6;
+  const completionBlock = !completion.targetId
+    ? "Select an order to see its planned output and saved BOM."
+    : readiness.isPending
+      ? "Checking saved material requirements…"
+      : readiness.isError
+        ? "Material requirements could not be checked. Refresh before completing."
+        : readiness.data?.status !== "Released"
+          ? `Order is ${readiness.data?.status}. Select a released order.`
+          : !readiness.data?.canComplete
+            ? "Issue all remaining raw materials in Material Preparation before completing. See the saved BOM below."
+            : outputTotal !== readiness.data.plannedQuantity
+              ? `Entered output plus scrap: ${outputTotal}. Planned: ${readiness.data.plannedQuantity} ${readiness.data.outputUom}. Partial completion is not supported. Enter actual quantities; do not add fictitious scrap.`
+              : "";
+
   const [bom, setBom] = useState([{ materialId: "", quantity: "1" }]);
   const [lookup, setLookup] = useState("");
   const [lookupResult, setLookupResult] = useState<unknown>(null);
@@ -414,11 +574,41 @@ function PlantOperations({
   const suppliers = options("partners", (r) => r.kind === "Supplier");
   const customers = options("partners", (r) => r.kind === "Customer");
   const pallets = options("pallets");
+  const eligiblePallets = (data.pallets || []).flatMap((pallet) => {
+    const batch = data.batches?.find((b) => b.id === pallet.batchId);
+    const line = preparation.data?.requirements.find(
+      (r) => r.materialId === batch?.materialId && r.toReserve > 0,
+    );
+    const free = Number(
+      (Number(pallet.quantity) - Number(pallet.reservedQuantity)).toFixed(6),
+    );
+    if (
+      !line ||
+      !batch ||
+      batch.kind !== "Raw" ||
+      batch.qualityStatus !== "Released" ||
+      (batch.expiryDate &&
+        Date.parse(String(batch.expiryDate)) <= Date.now()) ||
+      free <= 0
+    )
+      return [];
+    return [
+      {
+        value: pallet.id,
+        label: `${line.code} · ${pallet.code} · available ${free} ${line.uom}`,
+      },
+    ];
+  });
   const batches = options("batches");
   const bins = options("bins", undefined, "code");
   const production = options("production-orders");
   const released = options("production-orders", (r) => r.status === "Released");
-  const reservations = options("reservations", (r) => r.status === "Reserved");
+  const reservations = options(
+    "reservations",
+    (r) =>
+      r.status === "Reserved" &&
+      (!prepOrderId || r.productionOrderId === prepOrderId),
+  );
   const references: Record<string, string> = {
     materialId: "materials",
     supplierId: "partners",
@@ -458,6 +648,8 @@ function PlantOperations({
     extra?: FormProps["extra"],
     children?: ReactNode,
     note?: string,
+    onValuesChange?: FormProps["onValuesChange"],
+    blockedReason?: string,
   ) => (
     <CommandForm
       key={title}
@@ -468,6 +660,8 @@ function PlantOperations({
       disabled={isManager ? !manager : !writable}
       extra={extra}
       note={note}
+      onValuesChange={onValuesChange}
+      blockedReason={blockedReason}
     >
       {children}
     </CommandForm>
@@ -727,13 +921,18 @@ function PlantOperations({
                   "Released production order",
                   released,
                 ),
-                choice("palletId", "Source pallet", pallets),
+                choice("palletId", "Source pallet", eligiblePallets),
                 num("quantity", "Reservation quantity"),
               ],
               false,
               undefined,
-              undefined,
-              "Released, unexpired raw stock only. Reservations must fit the order BOM requirements.",
+              <ReadinessSummary
+                order={preparation.data}
+                pending={!!prepOrderId && preparation.isPending}
+                error={preparation.error?.message}
+              />,
+              "Select an order first. Only released, unexpired raw pallets still needed by its saved BOM are offered. Enter quantities in the material’s unit.",
+              (values) => setPrepOrderId(values.productionOrderId),
             )}
             {form("Issue reservation", byId("reservations", "issue"), [
               choice("targetId", "Reservation to issue", reservations),
@@ -868,8 +1067,19 @@ function PlantOperations({
               ],
               false,
               undefined,
-              undefined,
-              "Issue every BOM requirement first. Good output + scrap must equal planned output. Completion creates a quality-held finished pallet.",
+              <ReadinessSummary
+                order={readiness.data}
+                pending={!!completion.targetId && readiness.isPending}
+                error={readiness.error?.message}
+              />,
+              "This closes the whole order. Good output + actual scrap must equal its planned output. All saved raw-material requirements must be issued first.",
+              (values) =>
+                setCompletion({
+                  targetId: values.targetId,
+                  quantity: values.quantity,
+                  scrapQuantity: values.scrapQuantity,
+                }),
+              completionBlock,
             )}
             {form("Record downtime", "downtime", [
               choice("productionOrderId", "Production order", production),

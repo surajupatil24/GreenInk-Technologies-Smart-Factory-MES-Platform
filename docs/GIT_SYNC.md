@@ -20,3 +20,7 @@ docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up 
 ```
 
 Keep `.env` and the database volume. Never append `--volumes` to a shutdown as part of a routine update. On Development startup the API upgrades the schema automatically; the populated-foundation upgrade regression passed. Open http://localhost:8080 and refresh. Select a plant and follow OPERATIONS_GUIDE.md. Cloud files do not change Windows files until fetched/merged locally. Complete original scope and production deployment remain separate tasks.
+
+## Latest verified baseline and BOM guidance update
+
+The user successfully pushed the operational update and final preference commit; GitHub main was directly verified at `94ec56e`. The older HTTP403/main-baseline description above records the earlier handoff, not the latest confirmed remote state. The saved-BOM guidance fix is prepared on top of `94ec56e` with message `Next Phase`. If cloud push is rejected, download `GreenInk-BOM-Guidance.bundle` to Downloads and import it with the same fetch/fast-forward/push procedure, substituting that filename. It contains only the newer commit chain. Both API and web need rebuilding; there is no additional database migration.

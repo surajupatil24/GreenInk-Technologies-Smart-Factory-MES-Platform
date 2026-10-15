@@ -172,6 +172,18 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
     .getByLabel("Draft production order", { exact: true })
     .selectOption(order.id);
   await save("Release order", `production-orders/${order.id}/release`);
+  form = section("Complete production");
+  await form
+    .getByLabel("Production order to complete", { exact: true })
+    .selectOption(order.id);
+  await fill(form, { "Good output quantity": "8", "Scrap quantity": "0" });
+  await expect(form.locator(".saved-bom")).toContainText(
+    "Planned output: 8 kg",
+  );
+  await expect(form.locator(".saved-bom")).toContainText("Still to issue10 kg");
+  await expect(
+    form.getByRole("button", { name: "Complete production", exact: true }),
+  ).toBeDisabled();
   await navigate("Material Preparation");
   form = section("Reserve material");
   await form
@@ -182,6 +194,12 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
     .selectOption(receipt.palletId);
   await fill(form, { "Reservation quantity": "10" });
   const reservation = await save("Reserve material", "reservations");
+  await expect(form.locator(".saved-bom")).toContainText(
+    "Issue the existing reservations",
+  );
+  await expect(form.locator(".saved-bom")).toContainText(
+    "Reserved, awaiting issue10 kg",
+  );
   form = section("Issue reservation");
   await form
     .getByLabel("Reservation to issue", { exact: true })
@@ -201,6 +219,14 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
   await form
     .getByLabel("Production order to complete", { exact: true })
     .selectOption(order.id);
+  await expect(form.locator(".saved-bom")).toContainText(
+    "Material requirement fully issued",
+  );
+  await fill(form, { "Good output quantity": "5", "Scrap quantity": "0" });
+  await expect(
+    form.getByRole("button", { name: "Complete production", exact: true }),
+  ).toBeDisabled();
+  await expect(form).toContainText("Partial completion is not supported");
   await fill(form, { "Good output quantity": "8", "Scrap quantity": "0" });
   await form
     .getByLabel("Finished goods bin", { exact: true })

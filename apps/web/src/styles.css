@@ -1392,3 +1392,46 @@ dd {
     white-space: nowrap;
   }
 }
+
+.saved-bom {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 0;
+}
+.saved-bom h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.saved-bom p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.saved-bom-material {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+.saved-bom-material h4 {
+  margin: 12px 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.saved-bom-material dl {
+  margin: 0;
+}
+.saved-bom-material dl > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.saved-bom-material dt {
+  color: var(--muted);
+}
+.saved-bom-material dd {
+  margin: 0;
+  font-weight: 600;
+}

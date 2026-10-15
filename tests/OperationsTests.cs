@@ -130,6 +130,159 @@ public sealed class OperationsTests : IAsyncLifetime
         };
 
     [Fact]
+    public async Task SavedBomReadinessExplainsReservationAndCompletionBlocks()
+    {
+        using var admin = await factory.Login("admin@example.test");
+        var data = await MasterData(admin, 50);
+        var receipt = await Post(
+            admin,
+            Root + "/receipts",
+            Receipt(data.Purchase, 50, "READINESS", Guid.NewGuid())
+        );
+        var order = await Post(
+            admin,
+            Root + "/production-orders",
+            new
+            {
+                plantId = factory.PlantA,
+                number = "READINESS-ORDER",
+                materialId = data.Finished,
+                plannedQuantity = 25,
+                requirements = new[] { new { materialId = data.Material, quantity = 10 } },
+            }
+        );
+        var orderId = Id(order);
+        var palletId = receipt.GetProperty("palletId").GetGuid();
+        var url = $"{Root}/production-orders/{orderId}/requirements?plantId={factory.PlantA}";
+        async Task<JsonElement> Read() => await admin.GetFromJsonAsync<JsonElement>(url);
+        var initial = await Read();
+        Assert.Equal(25, initial.GetProperty("plannedQuantity").GetDecimal());
+        var initialLine = initial.GetProperty("requirements")[0];
+        Assert.Equal(10, initialLine.GetProperty("requiredQuantity").GetDecimal());
+        Assert.Equal(0, initialLine.GetProperty("availableQuantity").GetDecimal());
+        Assert.False(initial.GetProperty("canComplete").GetBoolean());
+        await Inspect(admin, receipt.GetProperty("batchId").GetGuid());
+        await Post(
+            admin,
+            $"{Root}/production-orders/{orderId}/release",
+            new { plantId = factory.PlantA, commandId = Guid.NewGuid() }
+        );
+        using var tooMuch = await admin.PostAsJsonAsync(
+            Root + "/reservations",
+            new
+            {
+                plantId = factory.PlantA,
+                productionOrderId = orderId,
+                palletId,
+                quantity = 50,
+                commandId = Guid.NewGuid(),
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, tooMuch.StatusCode);
+        Assert.Contains("at most 10", await tooMuch.Content.ReadAsStringAsync());
+        var first = await Post(
+            admin,
+            Root + "/reservations",
+            new
+            {
+                plantId = factory.PlantA,
+                productionOrderId = orderId,
+                palletId,
+                quantity = 4,
+                commandId = Guid.NewGuid(),
+            }
+        );
+        var pending = (await Read()).GetProperty("requirements")[0];
+        Assert.Equal(4, pending.GetProperty("reservedQuantity").GetDecimal());
+        Assert.Equal(6, pending.GetProperty("toReserve").GetDecimal());
+        Assert.Equal(10, pending.GetProperty("toIssue").GetDecimal());
+        await Post(
+            admin,
+            $"{Root}/reservations/{Id(first)}/issue",
+            new { plantId = factory.PlantA, commandId = Guid.NewGuid() }
+        );
+        var issued = (await Read()).GetProperty("requirements")[0];
+        Assert.Equal(4, issued.GetProperty("issuedQuantity").GetDecimal());
+        Assert.Equal(0, issued.GetProperty("reservedQuantity").GetDecimal());
+        Assert.Equal(6, issued.GetProperty("toIssue").GetDecimal());
+        using var blocked = await admin.PostAsJsonAsync(
+            $"{Root}/production-orders/{orderId}/complete",
+            new
+            {
+                plantId = factory.PlantA,
+                quantity = 24,
+                scrapQuantity = 1,
+                location = "STORE",
+                commandId = Guid.NewGuid(),
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, blocked.StatusCode);
+        Assert.Contains("Issue 6 kg more of RAW", await blocked.Content.ReadAsStringAsync());
+        var rest = await Post(
+            admin,
+            Root + "/reservations",
+            new
+            {
+                plantId = factory.PlantA,
+                productionOrderId = orderId,
+                palletId,
+                quantity = 6,
+                commandId = Guid.NewGuid(),
+            }
+        );
+        await Post(
+            admin,
+            $"{Root}/reservations/{Id(rest)}/issue",
+            new { plantId = factory.PlantA, commandId = Guid.NewGuid() }
+        );
+        Assert.True((await Read()).GetProperty("canComplete").GetBoolean());
+        using var wrongOutput = await admin.PostAsJsonAsync(
+            $"{Root}/production-orders/{orderId}/complete",
+            new
+            {
+                plantId = factory.PlantA,
+                quantity = 15,
+                scrapQuantity = 0,
+                location = "STORE",
+                commandId = Guid.NewGuid(),
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, wrongOutput.StatusCode);
+        Assert.Contains("planned quantity of 25", await wrongOutput.Content.ReadAsStringAsync());
+        Assert.Equal(
+            HttpStatusCode.Forbidden,
+            (
+                await admin.GetAsync(
+                    $"{Root}/production-orders/{orderId}/requirements?plantId={factory.PlantB}"
+                )
+            ).StatusCode
+        );
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (
+                await admin.GetAsync(
+                    $"{Root}/production-orders/{Guid.NewGuid()}/requirements?plantId={factory.PlantA}"
+                )
+            ).StatusCode
+        );
+        using var viewer = await factory.Login("viewer@example.test");
+        Assert.Equal(HttpStatusCode.OK, (await viewer.GetAsync(url)).StatusCode);
+        await Post(
+            admin,
+            $"{Root}/production-orders/{orderId}/complete",
+            new
+            {
+                plantId = factory.PlantA,
+                quantity = 24,
+                scrapQuantity = 1,
+                location = "STORE",
+                commandId = Guid.NewGuid(),
+            }
+        );
+        Assert.False((await Read()).GetProperty("canComplete").GetBoolean());
+    }
+
+    [Fact]
     public async Task ReceivingRetriesPreserveLedgerAndRejectInvalidOrConflictingCommands()
     {
         using var admin = await factory.Login("admin@example.test");
@@ -234,7 +387,22 @@ public sealed class OperationsTests : IAsyncLifetime
     {
         using var admin = await factory.Login("admin@example.test");
         var data = await MasterData(admin);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.PostAsJsonAsync(Root + "/production-orders", new { plantId = factory.PlantA, number = "INVALID", materialId = data.Finished, plannedQuantity = 1, requirements = new object?[] { null } })).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.BadRequest,
+            (
+                await admin.PostAsJsonAsync(
+                    Root + "/production-orders",
+                    new
+                    {
+                        plantId = factory.PlantA,
+                        number = "INVALID",
+                        materialId = data.Finished,
+                        plannedQuantity = 1,
+                        requirements = new object?[] { null },
+                    }
+                )
+            ).StatusCode
+        );
         Assert.Equal(0, await ReadDb(db => db.Set<ProductionOrder>().CountAsync()));
         using var viewer = await factory.Login("viewer@example.test");
         Assert.Equal(
@@ -463,7 +631,10 @@ public sealed class OperationsTests : IAsyncLifetime
             );
             Assert.True(trace.GetProperty("isComplete").GetBoolean());
             Assert.False(trace.GetProperty("collectionsTruncated").GetBoolean());
-            Assert.All(trace.GetProperty("perListTruncated").EnumerateObject(), flag => Assert.False(flag.Value.GetBoolean()));
+            Assert.All(
+                trace.GetProperty("perListTruncated").EnumerateObject(),
+                flag => Assert.False(flag.Value.GetBoolean())
+            );
             Assert.Equal(
                 rawBatch,
                 trace
@@ -578,9 +749,25 @@ public sealed class OperationsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, qr.StatusCode);
         Assert.Equal("image/svg+xml", qr.Content.Headers.ContentType?.MediaType);
         Assert.Contains("<svg", await qr.Content.ReadAsStringAsync());
-        await Post(admin, Root + "/adjustments", new { plantId = factory.PlantA, palletId = receipt.GetProperty("palletId").GetGuid(), quantity = 2, reason = "Count after label generation", commandId = Guid.NewGuid() });
-        var historical = await admin.GetFromJsonAsync<JsonElement>($"{Root}/print-jobs/{Id(job)}/preview?plantId={factory.PlantA}");
-        Assert.Equal(preview.GetProperty("renderedContent").GetString(), historical.GetProperty("renderedContent").GetString());
+        await Post(
+            admin,
+            Root + "/adjustments",
+            new
+            {
+                plantId = factory.PlantA,
+                palletId = receipt.GetProperty("palletId").GetGuid(),
+                quantity = 2,
+                reason = "Count after label generation",
+                commandId = Guid.NewGuid(),
+            }
+        );
+        var historical = await admin.GetFromJsonAsync<JsonElement>(
+            $"{Root}/print-jobs/{Id(job)}/preview?plantId={factory.PlantA}"
+        );
+        Assert.Equal(
+            preview.GetProperty("renderedContent").GetString(),
+            historical.GetProperty("renderedContent").GetString()
+        );
         var reprint = new
         {
             plantId = factory.PlantA,
@@ -603,8 +790,13 @@ public sealed class OperationsTests : IAsyncLifetime
             ).StatusCode
         );
         var duplicate = await Post(admin, $"{Root}/print-jobs/{Id(job)}/reprint", reprint);
-        var reprinted = await admin.GetFromJsonAsync<JsonElement>($"{Root}/print-jobs/{Id(duplicate)}/preview?plantId={factory.PlantA}");
-        Assert.Equal(preview.GetProperty("renderedContent").GetString(), reprinted.GetProperty("renderedContent").GetString());
+        var reprinted = await admin.GetFromJsonAsync<JsonElement>(
+            $"{Root}/print-jobs/{Id(duplicate)}/preview?plantId={factory.PlantA}"
+        );
+        Assert.Equal(
+            preview.GetProperty("renderedContent").GetString(),
+            reprinted.GetProperty("renderedContent").GetString()
+        );
         Assert.Equal(
             Id(duplicate),
             Id(await Post(admin, $"{Root}/print-jobs/{Id(job)}/reprint", reprint))

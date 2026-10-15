@@ -94,7 +94,10 @@ public static class ExecutionEndpoints
                     r.Requirements is { Length: > 0 and <= 200 },
                     "Supply 1–200 raw material requirements."
                 );
-                Ops.Check(r.Requirements.All(x => x is not null), "BOM requirements cannot contain null entries.");
+                Ops.Check(
+                    r.Requirements.All(x => x is not null),
+                    "BOM requirements cannot contain null entries."
+                );
                 Ops.Check(
                     r.Requirements.Select(x => x.MaterialId).Distinct().Count()
                         == r.Requirements.Length,
@@ -215,7 +218,7 @@ public static class ExecutionEndpoints
                 var used = await Used(db, s, o.Id, batch.MaterialId);
                 Ops.Check(
                     open + used + r.Quantity <= bom!.Quantity,
-                    "Reservation exceeds the BOM requirement."
+                    $"Order {o.Number} requires {bom!.Quantity:0.######} of this material: {used:0.######} issued and {open:0.######} reserved. Reserve at most {Math.Max(0, bom.Quantity - used - open):0.######} more."
                 );
                 pallet.ReservedQuantity += r.Quantity;
                 var row = Ops.Stamp(
@@ -368,7 +371,7 @@ public static class ExecutionEndpoints
                 );
                 Ops.Check(
                     r.Quantity + r.ScrapQuantity == o.PlannedQuantity,
-                    "Output plus scrap must equal planned quantity."
+                    $"Good output plus scrap must equal this order’s planned quantity of {o.PlannedQuantity:0.######}. Partial completion is not supported; enter actual quantities only."
                 );
                 Ops.Check(
                     await Ops.Rows<WarehouseBin>(db, s).AnyAsync(x => x.Code == location),
@@ -379,10 +382,17 @@ public static class ExecutionEndpoints
                     .ToListAsync();
                 Ops.Check(bom.Count > 0, "Order has no BOM requirements.");
                 foreach (var line in bom)
-                    Ops.Check(
-                        await Used(db, s, id, line.MaterialId) >= line.Quantity,
-                        "All BOM requirements must be issued before completion."
-                    );
+                {
+                    var issued = await Used(db, s, id, line.MaterialId);
+                    if (issued < line.Quantity)
+                    {
+                        var material = await Get<Material>(db, s, line.MaterialId);
+                        throw new OpsError(
+                            400,
+                            $"Issue {line.Quantity - issued:0.######} {material.Uom} more of {material.Code} — {material.Name} in Material Preparation before completing order {o.Number}. Required: {line.Quantity:0.######}; already issued: {issued:0.######}."
+                        );
+                    }
+                }
                 var batch = Ops.Stamp(
                     new Batch
                     {
