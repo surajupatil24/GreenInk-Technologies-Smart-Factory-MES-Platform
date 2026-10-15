@@ -25,6 +25,8 @@ services:
       Bootstrap__Email: ${BOOTSTRAP_EMAIL:?Set BOOTSTRAP_EMAIL}
       Bootstrap__Password: ${BOOTSTRAP_PASSWORD:?Set BOOTSTRAP_PASSWORD}
       Bootstrap__DisplayName: ${BOOTSTRAP_DISPLAY_NAME:?Set BOOTSTRAP_DISPLAY_NAME}
+    volumes:
+      - api_keys:/home/app/.aspnet/DataProtection-Keys
     depends_on:
       db:
         condition: service_healthy
@@ -40,3 +42,4 @@ services:
     restart: unless-stopped
 volumes:
   postgres_data:
+  api_keys:

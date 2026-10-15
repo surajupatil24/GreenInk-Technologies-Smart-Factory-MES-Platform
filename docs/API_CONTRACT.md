@@ -26,3 +26,7 @@ Codes contain 1–32 letters, digits, hyphens or underscores and are normalized 
 | PlantManager / Operator / Viewer | Own organization identity, explicitly assigned plants, own user profile and scoped dashboard |
 
 Production workflow permissions for the last three roles arrive with the corresponding MES modules. Custom role definitions, tenant/plant editing and deletion, account suspension/reset and enterprise OIDC are backlog items. Current user lists are not yet paginated. Dashboard user counts for non-administrators represent their own visible profile, not all tenant members. Audit storage has no editing endpoint; database-admin tamper protection and detailed before/after grant history require hardening.
+
+## Core operations extension
+
+See [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) for the plant-scoped `/api/operations` routes, DTO fields, role requirements, command replay/concurrency rules, lifecycle acceptance sequence and scope limits. This extension is under implementation and validation; prior foundation verification does not verify these new endpoints.

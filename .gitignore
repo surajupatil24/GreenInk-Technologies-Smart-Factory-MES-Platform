@@ -73,3 +73,6 @@ TestResults/
 
 *.tsbuildinfo
 !apps/web/package-lock.json
+
+# Local formatter cache
+/CSharpier/

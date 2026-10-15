@@ -85,3 +85,19 @@ If a port is occupied, stop the conflicting local process or change the publishe
 The cloud run validated the native API with PostgreSQL and built the web container. The API image pull was blocked at `westcentralus.data.mcr.microsoft.com` by network policy, so complete Compose startup remains unverified. No proxy bypass was attempted. On this managed workspace, .NET required writable `DOTNET_CLI_HOME`, `NUGET_PACKAGES`, and `XDG_RUNTIME_DIR` directories under `/tmp`.
 
 Dockerfiles support an optional BuildKit `proxy_ca` secret for package restore/install when a managed proxy requires its CA. Supply a combined trusted CA bundle using `docker build --secret id=proxy_ca,src=/path/to/combined-ca.pem ...`. The certificate is mounted only during the network step and is not copied into the image. Standard Windows Docker builds do not require this secret.
+
+## Operational update
+
+Pull the latest main branch and rebuild **both API and web** for the operational lifecycle and its migrations:
+
+```powershell
+cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
+git pull --ff-only origin main
+docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --build
+```
+
+Keep the existing private `.env` and PostgreSQL volume. Do not use `down --volumes`. The Development API applies `OperationsLifecycle` and `LabelPrintSnapshots` migrations to the existing database. A baseline-to-latest upgrade regression verifies tenant, plant, account, password hash, grant and session records survive. Back up the local database before upgrades, using BACKUP_RESTORE.md. API Data Protection keys now use an `api_keys` named volume; existing ephemeral cookies can require one new login when first moving to the volume. This development key store is not encryption-at-rest governance.
+
+After login, select an authorized plant, open Inbound and configure Materials (Raw/Finished), Supplier/Customer partners and bins. See OPERATIONS_GUIDE.md for the connected receive→release→reserve→issue→produce→release→ship workflow. Lists are bounded to 200 records; trace explicitly flags incomplete results. No demo records are automatically seeded. Labels use local text/QR previews; integration validation does not send messages to an ERP.
+
+Browser validation can use `GREENINK_E2E_PORT` and `API_PROXY_TARGET` to select a disposable Vite port and API address. The operations E2E suite creates uniquely identified test organization/plant/master/transaction data in the development database.

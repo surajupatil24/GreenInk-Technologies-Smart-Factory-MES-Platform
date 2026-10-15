@@ -10,5 +10,6 @@ WORKDIR /app
 COPY --from=build /out .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys && chown -R "$APP_UID" /home/app/.aspnet
 USER $APP_UID
 ENTRYPOINT ["dotnet", "GreenInk.Api.dll"]

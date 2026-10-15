@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-10-15. Milestone 1 core workflows are implemented and validated natively. The milestone remains open for complete Compose startup verification and remaining foundation review. This is an initial foundation, not a completed MES or production release.
+Updated: 2026-10-16. The foundation and a connected operational core across milestones 2–7 are implemented and validated. The original enterprise MES scope and production hardening are not complete. Read the latest phase results below; earlier evidence records the foundation baseline.
 
 ## Implemented
 
@@ -42,7 +42,7 @@ Cloud-only .NET SDK and writable tool caches were installed under `/tmp`. Browse
 2. Built-in roles are implemented; custom permission/role definitions, OIDC/SSO, MFA, administrator password recovery, account suspension and tenant/plant edit/delete workflows remain backlog. PlantManager/Operator/Viewer currently differ only in future operational intent; all have explicitly scoped foundation reads.
 3. Lists need pagination; grant updates need explicit optimistic concurrency handling. Add finer audit before/after details, session cleanup/retention, Data Protection key persistence/governance, proxy-aware authentication throttling, security headers and further accessibility/expiry/concurrency tests before release.
 4. Production deployment requires TLS, restricted database identities, separately controlled migrations, secret management, logging/telemetry review, load testing and UAT. Development startup alone auto-applies migrations.
-5. Inbound, inventory, staging, manufacturing, quality, finished goods, dispatch, traceability, printing, ERP and IoT workflows remain planned. Navigation entries explicitly display planned status. No live SAP, device, printer, messaging or object-store connection exists.
+5. Core inbound, inventory, staging, production, quality, finished goods, dispatch, traceability, local labels/integration and reporting workflows are now implemented. Advanced workflow requirements remain open in OPERATIONS_GUIDE.md. No live SAP, factory device, physical printer, broker or object-store connection exists.
 
 ## Changes and continuity
 
@@ -59,3 +59,41 @@ Replaced the leaf icon with a locally bundled tree logo recreated from the user'
 Recreated the supplied horizontal company branding: tree emblem, title-case bold green “Green Ink”, and handwritten “Your thought. Our ink” tagline. The text is part of a bundled transparent artwork asset so its typography is independent of installed fonts. This is a visual reconstruction, not the original font or source artwork. A white backing preserves readability in dark mode; the SmartFactory product label remains separate.
 
 Frontend production build passed. Chromium visual-fixture checks passed for desktop/mobile login, sidebar image decoding/width, and dark theme. Windows update ZIP includes only frontend source and branding assets, preserving private environment configuration and database volumes.
+
+## Core operations phase — validated 2026-10-16
+
+The next change connects basic vertical slices across milestones 2–7: plant-scoped master data, single-material purchasing/receiving with quality hold, pallet inventory and immutable movements, FEFO suggestions, production requirements/reservation/issue/completion, finished-goods inspection, delivery/shipment, internal genealogy, local label preview, local JSON connector and reports from persisted records. These core slices now pass database and browser validation as recorded below. Prior foundation and branding evidence above remains historical evidence for those changes only.
+
+All operations enforce plant-derived tenant scope. Viewer writes are denied; quality/release/adjustment/reprint privileges require manager roles. Posting commands use GUID command IDs for retry protection, serializable database transactions and PostgreSQL xmin conflict handling. These controls were exercised by negative authorization, duplicate-command, rollback and concurrent-posting tests.
+
+`OPERATIONS_GUIDE.md` documents the API conventions, acceptance sequence and per-module remaining scope. A basic connected lifecycle does **not** complete the original manufacturing requirements. Local label output is text and valid pallet-code QR SVG preview without physical printing. Integration `Validated` is local JSON validation, not ERP posting. Operational counts do not establish genuine OEE without actual machine and planned schedule data. No live SAP, printer or industrial device integration is claimed.
+
+The earlier statement that all operational modules remain planned describes the pre-operations baseline; this phase supersedes that baseline only for the core slices that are actually implemented and validated. Foundation hardening and complete original scope remain open. The parent validation report must add exact migration names, executed commands/results and remaining defects before this phase is marked verified. No production deployment is authorized by this implementation work.
+
+### Executed operational validation
+
+| Check | Actual result |
+| --- | --- |
+| Release API/PostgreSQL tests | `dotnet test tests/GreenInk.Api.Tests.csproj --configuration Release`: **18 passed, 0 failed, 0 skipped**, clean build |
+| Real browser regression | `npm run test:e2e`: **2 passed** against Release API on 5081/PostgreSQL; foundation 7.4s and complete operational lifecycle 12.9s, total23s |
+| Browser operational evidence | Created real scoped masters and PO, received/released/transferred/reserved/issued material, completed production, released FG, rendered real QR SVG, dispatched delivery, traversed trace, validated local JSON message, reconciled report values and confirmed Viewer write restrictions. Asserted stored label snapshots and complete trace flags |
+| Stock/concurrency/security | Competing receipt/reservation transactions; safe losing-command retry; no-negative/reserved bounds; command replays; held stock gates; immutable ledger rejects tracked and raw SQL edits; database composite FKs reject foreign-scope references; null BOM rejected |
+| Upgrade | Migrated a populated RevocableSessions baseline to latest; tenant/plant/account/hash/grant/session rows preserved and operational material creation succeeds |
+| Label history | Adjust stock after label creation; original preview and authorized reprint retain identical historical rendered content |
+| Reporting | Per-UOM totals, no fabricated OEE; repeatable-read snapshot for reports and genealogy; explicit truncation/completeness metadata |
+| Native API readiness | HTTP200, latest migrations applied to isolated operations validation database |
+| Operational recovery check | Logical dump/restore succeeded; nine selected table counts match, four migrations present and immutable ledger trigger restored. Full production recovery/login drill remains pending |
+| Dependency audit | API direct/transitive NuGet audit: no known vulnerable packages from configured sources |
+| Frontend / web image | TypeScript/Vite build and production web Docker image build passed |
+| Compose | Updated configuration validation passed with API key named volume; full cloud API-image build still blocked by Microsoft registry CDN HTTP403 |
+| Remote CI | Workflow includes PostgreSQL tests and both browser workflows; remote execution not yet verified |
+
+New migrations: `20261015194127_OperationsLifecycle` (20 operational tables, scoped composite relationships, quantities/checks, command indexes, xmin, immutable ledger trigger) and `20261015195055_LabelPrintSnapshots` (rendered content and template revision). All four project migrations apply to fresh databases; upgrade regression starts from the previous two-migration foundation. No production database or Windows filesystem was accessed from this session.
+
+Core UI is available for Inbound, Inventory, Material Preparation, Production, Quality, Finished Goods, Dispatch, Traceability, Label Studio, Integration Hub and Reports & Analytics. Command Center gains actual selected-plant order/hold/downtime metrics. Existing Green Ink branding is retained. No operational demo data is automatically seeded.
+
+### Remaining work and continuation
+
+The original request is larger than these core slices. Multi-line scheduling/imports, gate/dock/COA, cycle counting, pallet split/merge, scales/Kanban/substitution/returns, reusable versioned BOM/routing, equipment/shift/process parameters, full quality plans/test results/nonconformance, sales/pick-pack/load scanning, physical printer adapters, live ERP/IoT, historical exports and release hardening are **not complete**. The module-by-module backlog is maintained in OPERATIONS_GUIDE.md; do not claim the complete MES is finished.
+
+Labels are local text/QR previews, integrations validate local JSON, and OEE is absent until proper industrial timing data exists. Lists remain bounded at200 with no general pagination. Full API-container build and API-key-volume behavior need verification on the user's Docker Desktop because the managed cloud Microsoft registry CDN is blocked. Update both API and web containers for this phase; rebuilding only web cannot add the new API or tables. Existing `.env` and database volumes must be retained.

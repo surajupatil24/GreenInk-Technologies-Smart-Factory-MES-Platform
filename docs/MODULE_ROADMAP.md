@@ -13,10 +13,13 @@ Each milestone is a demonstrable vertical slice, not a single generated code dum
 | P3 | 7 — Integrations | Contract-tested local ERP adapters, outbox/messaging, retry/dead letters, IoT interfaces and monitoring; no live SAP claim without credentials and a test environment |
 | P0 before release | 8 — Hardening | E2E/accessibility, security/load review, backup restore drill, operational telemetry and UAT; approved production release checklist |
 
-## Next foundation gates
+## Current core implementation and next gates
 
-1. Native Release API/PostgreSQL tests and frontend build/browser workflow pass; maintain them in CI. Remote Actions execution remains unverified.
-2. Complete API image pull and fresh Compose startup/restart on Docker Desktop; managed cloud image CDN access is blocked.
-3. Review key persistence, session retention, proxy throttling, list pagination and grant concurrency before closing the foundation.
-4. Logical backup restore/schema/count check passed; verify recovered application login and operational recovery procedures.
-5. Then implement Milestone 2: material/UOM/supplier/warehouse/bin masters, purchase orders and the first transactional goods-receipt workflow with validation, inspection hold, batches and pallets. Add label adapters and put-away through tested vertical slices.
+The connected core across milestones2–7 is implemented and validated with18 PostgreSQL/API tests and2 browser tests. These do not close the full milestone scopes above. Detailed working contracts and remaining advanced requirements are in OPERATIONS_GUIDE.md.
+
+1. Verify the complete updated Compose stack on Docker Desktop; Microsoft registry CDN denial prevents the API image build in the managed cloud. Existing foundation boot/login was confirmed by the user.
+2. Next inbound expansion: multi-line PO scheduling/import, receipt inspection specifications and COA attachment, gate/dock handling and guided put-away.
+3. Inventory/staging expansion: cycle counts and adjustment approvals, partial pallet movement/split, unused material returns, pre-weigh/scanner validation and substitutions.
+4. Manufacturing/quality/dispatch expansion: versioned BOM/routings, equipment/shift capture, process tests/nonconformance, sales/pick-pack/load scans and shipping documents.
+5. Printer/ERP/device adapters require approved connection details and environment testing. Extend local contracts before claiming external delivery.
+6. Complete pagination, dependency/license review, accessibility/load/security testing, observability, recovery/UAT and production approval before external release.

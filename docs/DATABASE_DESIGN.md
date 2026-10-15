@@ -30,3 +30,11 @@ Use composite scope-aware foreign keys or equivalent database constraints to pre
 ## Migration and recovery
 
 Review generated SQL before release. Never silently drop tenant data or edit an already applied shared migration. Validate both empty-database creation and upgrades with representative data; back up before release and test recovery. See [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for a local logical recovery procedure. Production RPO/RTO, encryption, retention, offsite storage and scheduled restore drills remain deployment decisions.
+
+## Operational core schema
+
+`OperationsLifecycle` adds plant-scoped material, partner, bin, PO, receipt, batch, pallet, movement, order/BOM requirement, reservation, consumption, production confirmation, downtime, inspection, delivery, shipment, label template/job and integration message entities. Composite `(TenantId, PlantId, Id)` principal keys and composite foreign keys prevent cross-scope references in PostgreSQL, independently of route checks. Every row has an xmin-backed optimistic version. Decimal quantities use precision20,scale6; database checks enforce positive ordered/posted quantities and pallet `Quantity >= ReservedQuantity >= 0`. Scoped natural/command keys enforce duplicate prevention.
+
+Stock movements are append-only in DbContext and through a PostgreSQL trigger rejecting UPDATE/DELETE. Corrections append adjustment movements. Transfers retain quantity with zero-delta location history. Receipts, issue, production and shipment write balances, state, ledger and audit atomically under serializable isolation. Read-only genealogy and reports use repeatable-read snapshots.
+
+`LabelPrintSnapshots` adds rendered content and template revision to print jobs. Reprints preserve the original content rather than re-rendering current stock quantities. Legacy jobs with no snapshot are explicitly identified. See OPERATIONS_GUIDE.md for command-specific idempotency and the remaining broader schema requirements.
