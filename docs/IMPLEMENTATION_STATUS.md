@@ -46,4 +46,16 @@ Cloud-only .NET SDK and writable tool caches were installed under `/tmp`. Browse
 
 ## Changes and continuity
 
-Changes are prepared as uncommitted working-tree files for review; nothing is merged, pushed or externally deployed. Cloud files do not automatically update the Windows PC. Read `LOCAL_SETUP.md` for exact launch/test commands, `API_CONTRACT.md` for role scope, and `MODULE_ROADMAP.md` for next tasks. Complete remaining foundation gates before beginning Milestone 2 master data and inbound receiving.
+Foundation files are committed in the connected Git repository. Branding changes are synchronized to Git at the user’s explicit request; no application deployment is performed. Pull the repository and rebuild the web container to update the Windows PC. Read `LOCAL_SETUP.md` for exact launch/test commands, `API_CONTRACT.md` for role scope, and `MODULE_ROADMAP.md` for next tasks. Complete remaining foundation gates before beginning Milestone 2 master data and inbound receiving.
+
+## Branding update — 2026-10-16
+
+Replaced the leaf icon with a locally bundled tree logo recreated from the user's inline reference. It is an AI-assisted recreation rather than the original image file and may differ in fine detail. The shared logo appears on login and sidebar; the browser tab uses the same image. White backing keeps the mark visible in both themes. No external image requests.
+
+`npm --prefix apps/web run build` passed. A Chromium visual fixture smoke check verified logo decoding and 52px layout on login, sidebar and dark theme. This visual check used mocked session responses and makes no new backend validation claim. Existing Windows installation was confirmed by the user's successful Docker startup and login; cloud and Windows files still require explicit transfer.
+
+## Company wordmark refinement — 2026-10-16
+
+Recreated the supplied horizontal company branding: tree emblem, title-case bold green “Green Ink”, and handwritten “Your thought. Our ink” tagline. The text is part of a bundled transparent artwork asset so its typography is independent of installed fonts. This is a visual reconstruction, not the original font or source artwork. A white backing preserves readability in dark mode; the SmartFactory product label remains separate.
+
+Frontend production build passed. Chromium visual-fixture checks passed for desktop/mobile login, sidebar image decoding/width, and dark theme. Windows update ZIP includes only frontend source and branding assets, preserving private environment configuration and database volumes.

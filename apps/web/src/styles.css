@@ -105,36 +105,34 @@ small {
 }
 .logo {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: Manrope, sans-serif;
-  font-weight: 800;
-  letter-spacing: 1.7px;
-  font-size: 16px;
-  line-height: 1.1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  max-width: 390px;
 }
-.logo-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 39px;
-  height: 42px;
-  border-radius: 12px 4px 12px 4px;
-  background: #087e65;
-  color: white;
-  flex-shrink: 0;
+.logo-brand {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  background: #fff;
 }
-.logo small {
+.logo-wordmark {
   display: block;
-  letter-spacing: 0.5px;
-  font-size: 11px;
-  font-weight: 500;
-  margin-top: 7px;
-  color: var(--muted, #aacbc0);
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.logo-product {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--muted, #a5c5b6);
+  padding-left: 8px;
 }
 .sidebar .logo {
-  padding: 0 13px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 .nav-caption {
   font-size: 10px;
@@ -756,9 +754,6 @@ legend {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-.login-story .logo-mark {
-  background: #2c7358;
 }
 .login-story h1 {
   font-size: 40px;

@@ -19,7 +19,6 @@ import {
   FlaskConical,
   GitBranch,
   LayoutDashboard,
-  Leaf,
   LogOut,
   KeyRound,
   Menu,
@@ -175,12 +174,16 @@ function Login({ onLogin }: { onLogin: () => void }) {
 function Logo() {
   return (
     <div className="logo">
-      <span className="logo-mark">
-        <Leaf size={24} />
-      </span>
-      <div>
-        GREEN INK<small>SmartFactory</small>
+      <div className="logo-brand">
+        <img
+          className="logo-wordmark"
+          src="/greenink-wordmark.png"
+          alt="Green Ink — Your thought. Our ink"
+          width={2171}
+          height={724}
+        />
       </div>
+      <span className="logo-product">SmartFactory</span>
     </div>
   );
 }
