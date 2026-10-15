@@ -102,6 +102,69 @@ app.Use(
         {
             await next();
         }
+        catch (OpsError ex)
+        {
+            context.Response.StatusCode = ex.Status;
+            await context.Response.WriteAsJsonAsync(new { detail = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+            when (ex.GetBaseException()
+                    is PostgresException
+                    {
+                        SqlState: PostgresErrorCodes.SerializationFailure
+                            or PostgresErrorCodes.DeadlockDetected
+                    }
+            )
+        {
+            context.Response.StatusCode = 409;
+            await context.Response.WriteAsJsonAsync(
+                new
+                {
+                    detail = "Concurrent stock transaction. Refresh and retry with the same commandId.",
+                }
+            );
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.Response.StatusCode = 409;
+            await context.Response.WriteAsJsonAsync(
+                new
+                {
+                    detail = "Stock or workflow changed. Refresh and retry with the same commandId.",
+                }
+            );
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState
+                    is PostgresErrorCodes.SerializationFailure
+                        or PostgresErrorCodes.DeadlockDetected
+            )
+        {
+            context.Response.StatusCode = 409;
+            await context.Response.WriteAsJsonAsync(
+                new
+                {
+                    detail = "Concurrent transaction. Refresh and retry with the same commandId.",
+                }
+            );
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException
+                    is PostgresException
+                    {
+                        SqlState: PostgresErrorCodes.SerializationFailure
+                            or PostgresErrorCodes.DeadlockDetected
+                    }
+            )
+        {
+            context.Response.StatusCode = 409;
+            await context.Response.WriteAsJsonAsync(
+                new
+                {
+                    detail = "Concurrent transaction. Refresh and retry with the same commandId.",
+                }
+            );
+        }
         catch (DbUpdateException ex)
             when (ex.InnerException
                     is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
@@ -109,7 +172,7 @@ app.Use(
         {
             context.Response.StatusCode = 409;
             await context.Response.WriteAsJsonAsync(
-                new { detail = "This code or email is already in use." }
+                new { detail = "This code, reference or command is already in use." }
             );
         }
     }
@@ -509,6 +572,9 @@ if (!app.Environment.IsEnvironment("Testing"))
         await db.SaveChangesAsync();
     }
 }
+app.MapInboundInventory();
+app.MapExecution();
+app.MapInsights();
 app.Run();
 static ClaimsPrincipal SessionPrincipal(User u, Guid sessionId) =>
     new(
