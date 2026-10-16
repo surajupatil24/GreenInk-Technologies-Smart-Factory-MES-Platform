@@ -26,7 +26,12 @@ public static class InboundInventoryEndpoints
         string SupplierBatch,
         string BatchNumber,
         DateTimeOffset? ExpiryDate,
-        Guid CommandId
+        Guid CommandId,
+        Guid? TruckVisitId = null,
+        string? DeliveryNote = null,
+        decimal? PackSize = null,
+        int? PackCount = null,
+        decimal LooseQuantity = 0
     );
 
     public record TransferInput(Guid PlantId, Guid PalletId, string Location, Guid CommandId);
@@ -283,6 +288,35 @@ public static class InboundInventoryEndpoints
                 Ops.Command(r.CommandId);
                 var supplierBatch = Ops.Name(r.SupplierBatch);
                 var batchNumber = Ops.Code(r.BatchNumber);
+                var deliveryNote = (r.DeliveryNote ?? "").Trim();
+                Ops.Check(
+                    deliveryNote.Length <= 160,
+                    "Delivery note must be at most 160 characters."
+                );
+                Ops.Check(
+                    r.LooseQuantity >= 0
+                        && r.LooseQuantity <= 1000000000m
+                        && decimal.Round(r.LooseQuantity, 6) == r.LooseQuantity,
+                    "Loose quantity must be nonnegative with at most six decimals."
+                );
+                if (r.PackSize.HasValue || r.PackCount.HasValue)
+                {
+                    Ops.Check(
+                        r.PackSize.HasValue
+                            && Ops.Positive(r.PackSize.Value)
+                            && r.PackCount is > 0 and <= 1000000,
+                        "Enter a positive pack size and whole pack count (maximum 1,000,000)."
+                    );
+                    Ops.Check(
+                        r.PackSize!.Value * r.PackCount!.Value + r.LooseQuantity == r.Quantity,
+                        "Received quantity must equal pack size × pack count + loose quantity."
+                    );
+                }
+                else
+                    Ops.Check(
+                        r.LooseQuantity == 0,
+                        "Loose quantity requires pack size and pack count."
+                    );
                 Ops.Check(
                     Ops.Positive(r.Quantity),
                     "Quantity must be positive with at most six decimals."
@@ -300,7 +334,12 @@ public static class InboundInventoryEndpoints
                             && existing.Quantity == r.Quantity
                             && existing.SupplierBatch == supplierBatch
                             && b.Number == batchNumber
-                            && b.ExpiryDate == r.ExpiryDate,
+                            && b.ExpiryDate == r.ExpiryDate
+                            && existing.TruckVisitId == r.TruckVisitId
+                            && existing.DeliveryNote == deliveryNote
+                            && existing.PackSize == r.PackSize
+                            && existing.PackCount == r.PackCount
+                            && existing.LooseQuantity == r.LooseQuantity,
                         "commandId was already used for a different receipt."
                     );
                     return Results.Ok(existing);
@@ -312,6 +351,33 @@ public static class InboundInventoryEndpoints
                 var po = await Ops.Rows<PurchaseOrder>(db, s)
                     .SingleOrDefaultAsync(x => x.Id == r.PurchaseOrderId);
                 Ops.Check(po is not null, "Purchase order not found in this plant.");
+                var policy = await Ops.Rows<ReceivingPolicy>(db, s).SingleOrDefaultAsync();
+                Ops.Check(
+                    policy?.RequireDeliveryNote != true || deliveryNote.Length > 0,
+                    "Delivery note is required by the plant receiving policy."
+                );
+                Ops.Check(
+                    policy?.RequireTruck != true || r.TruckVisitId.HasValue,
+                    "Select a registered truck visit before receiving."
+                );
+                if (r.TruckVisitId.HasValue)
+                {
+                    var visit = await Ops.Rows<TruckVisit>(db, s)
+                        .SingleOrDefaultAsync(x => x.Id == r.TruckVisitId);
+                    Ops.Check(
+                        visit is not null && visit.Status == "Unloading" && visit.ExitedAt == null,
+                        "Truck must be actively unloading before receiving; exited tokens are invalid."
+                    );
+                    Ops.Check(
+                        await Ops.Rows<TruckOrder>(db, s)
+                            .AnyAsync(x =>
+                                x.TruckVisitId == r.TruckVisitId
+                                && x.PurchaseOrderId == r.PurchaseOrderId
+                            ),
+                        "Purchase order is not registered on this truck."
+                    );
+                    await ReceivingEndpoints.CheckGate(db, s, r.TruckVisitId.Value, "Unloading");
+                }
                 Ops.Check(po!.Status is "Open" or "Partial", "Purchase order is not open.");
                 Ops.Check(
                     po.ReceivedQuantity + r.Quantity <= po.Quantity,
@@ -350,6 +416,11 @@ public static class InboundInventoryEndpoints
                         PalletId = pallet.Id,
                         Quantity = r.Quantity,
                         SupplierBatch = supplierBatch,
+                        TruckVisitId = r.TruckVisitId,
+                        DeliveryNote = deliveryNote,
+                        PackSize = r.PackSize,
+                        PackCount = r.PackCount,
+                        LooseQuantity = r.LooseQuantity,
                         CommandId = r.CommandId,
                     },
                     s

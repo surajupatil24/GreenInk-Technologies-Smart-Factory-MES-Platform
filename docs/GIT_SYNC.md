@@ -1,3 +1,26 @@
+# Latest inbound receiving update
+
+Remote main was directly fetched and verified at `26dca52` before this phase. Receiving control is prepared on top of that baseline with the requested commit message `Next Phase`. The older handoffs below are historical and do not describe the latest baseline. The direct push for this phase was attempted and rejected by GitHub with HTTP403 (repository write permission denied). Remote main remains `26dca52`; it is not synchronized with this new phase. The verified incremental `GreenInk-Inbound-Control.bundle` preserves all phase changes for import/push using the user's Windows Git credentials.
+
+If the cloud write-access denial persists, download `GreenInk-Inbound-Control.bundle` to Downloads. Run each command separately:
+
+```powershell
+cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
+git fetch "$HOME\Downloads\GreenInk-Inbound-Control.bundle" HEAD
+git merge --ff-only FETCH_HEAD
+git push origin HEAD:main
+```
+
+Back up the database, then rebuild both containers (retain `.env` and database volumes):
+
+```powershell
+docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --build
+```
+
+This phase adds the ReceivingGate migration. Read RECEIVING_CONTROL.md for the new workspace and INBOUND_REQUIREMENTS.md for remaining manual scope. The uploaded ZIP was not reviewed because it exceeds the32MiB transfer limit.
+
+---
+
 # Git synchronization — 2026-10-16 operations update
 
 The operational lifecycle is committed on local branch `mes-operations`. The attempted fast-forward push to GitHub main was rejected with HTTP403: the connected cloud Git credentials do not have write access. GitHub main therefore remains at `2b2ca82`; do not assume the latest operational work is remotely available yet.

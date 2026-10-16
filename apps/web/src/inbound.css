@@ -1,0 +1,227 @@
+.app.dark .inbound-desk {
+  --accent-soft: #203e31;
+}
+.inbound-desk {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+.inbound-intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: var(--accent-soft, #e6f3ed);
+  color: var(--text, #174939);
+}
+.inbound-intro h2 {
+  font-size: 26px;
+  margin: 10px 0;
+}
+.inbound-intro p {
+  margin: 0;
+}
+.inbound-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.inbound-metrics article {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.inbound-metrics strong {
+  grid-column: 2;
+  font-size: 30px;
+}
+.inbound-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.inbound-queue,
+.inbound-action {
+  padding: 26px;
+  min-width: 0;
+}
+.inbound-action h2,
+.inbound-queue h2 {
+  margin: 0 0 18px;
+}
+.inbound-action fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.inbound-action label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.inbound-action input:not([type="checkbox"]),
+.inbound-action select,
+.inbound-action textarea,
+.inbound-filter input,
+.inbound-filter select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border, #d8e3df);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface, #fff);
+  color: inherit;
+  min-width: 0;
+  font: inherit;
+}
+.inbound-action button.primary {
+  margin-top: 20px;
+  width: 100%;
+}
+.inbound-action small {
+  display: block;
+}
+.inbound-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+.inbound-filter {
+  display: flex;
+  gap: 12px;
+}
+.inbound-filter select {
+  max-width: 145px;
+}
+.inbound-visit-list {
+  display: grid;
+  gap: 10px;
+  max-height: 650px;
+  overflow: auto;
+}
+.inbound-visit {
+  display: flex;
+  text-align: left;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border, #d8e3df);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.inbound-visit small {
+  display: block;
+  margin-top: 7px;
+}
+.inbound-visit.chosen {
+  border-color: #068565;
+  background: var(--accent-soft, #e6f3ed);
+}
+.inbound-status {
+  font-size: 12px;
+  padding: 6px 9px;
+  background: var(--accent-soft, #e6f3ed);
+  border-radius: 20px;
+}
+.inbound-detail {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.inbound-timeline {
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.inbound-timeline li {
+  padding: 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #d8e3df);
+}
+.inbound-timeline [aria-current="step"] {
+  background: #087f62;
+  color: #fff;
+}
+.inbound-dates > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #d8e3df);
+  font-size: 12px;
+}
+.inbound-dates dd {
+  text-align: right;
+  margin: 0;
+}
+.inbound-action code {
+  overflow-wrap: anywhere;
+}
+.inbound-checkbox {
+  display: flex !important;
+  align-items: center;
+}
+.inbound-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+.inbound-total {
+  padding: 24px;
+  border-radius: 10px;
+  background: var(--accent-soft, #e6f3ed);
+  display: grid;
+  gap: 8px;
+}
+.inbound-total strong {
+  font-size: 32px;
+}
+.inbound-action :focus-visible,
+.inbound-visit:focus-visible {
+  outline: 3px solid #38bd97;
+  outline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .inbound-layout {
+    grid-template-columns: 1fr;
+  }
+  .inbound-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 550px) {
+  .inbound-input-grid {
+    grid-template-columns: 1fr;
+  }
+  .inbound-action,
+  .inbound-queue,
+  .inbound-intro {
+    padding: 18px;
+  }
+  .inbound-metrics {
+    gap: 10px;
+  }
+  .inbound-metrics article {
+    padding: 14px;
+  }
+  .inbound-filter {
+    flex-direction: column;
+  }
+  .inbound-filter select {
+    max-width: none;
+  }
+}

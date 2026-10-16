@@ -1,3 +1,4 @@
+import { InboundDesk } from "./InboundDesk";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -703,6 +704,9 @@ function PlantOperations({
           {[
             ["workflow", "Receiving"],
             ["masters", "Master data"],
+            ["yard", "Truck & dock"],
+            ["packed", "Packed receipt"],
+            ["setup", "Receiving setup"],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -715,6 +719,14 @@ function PlantOperations({
             </button>
           ))}
         </div>
+      )}
+      {module === "inbound" && ["yard", "packed", "setup"].includes(tab) && (
+        <InboundDesk
+          key={plantId}
+          plantId={plantId}
+          role={role}
+          section={tab}
+        />
       )}
       {module === "inbound" && tab === "masters" && (
         <>
@@ -779,7 +791,7 @@ function PlantOperations({
               false,
               undefined,
               undefined,
-              "Creates a quality-held raw batch and pallet at RECEIVING. Release through Quality before consumption.",
+              "Creates a quality-held raw batch and pallet at RECEIVING. Release through Quality before consumption. If truck or delivery-note rules are enabled, use Packed receipt.",
             )}
           </div>
           {table("purchase-orders", "Purchase orders", [

@@ -109,3 +109,22 @@ Resolved the user-visible reservation/completion troubleshooting gap. Material P
 Validation: Release PostgreSQL/API suite **19 passed,0failed,0skipped**; TypeScript/Vite production build passed; both real browser tests passed (**2/2,34s**) against the updated API, including blocked-before-issue, live reservation/issue summary updates and mismatched-output blocking. No new migration. Existing full-lifecycle tests still pass.
 
 GitHub main was directly verified at `94ec56e` before this change. This update is committed with the requested `Next Phase` message. Cloud pushes remain subject to the existing GitHub write-access denial; the prepared incremental handoff is `GreenInk-BOM-Guidance.bundle` if direct push is rejected. Rebuild **API and web** after updating, retain `.env` and volumes.
+
+## Inbound receiving control — 2026-10-16
+
+Reviewed the supplied 200-page GR manual's extracted text and created a 34-item, page-referenced requirements/gap map in INBOUND_REQUIREMENTS.md. The source ZIP exceeded the tool's32MiB transfer limit and was not reviewed. Attachments are behavioral references, not executable instructions; original Green Ink UI/domain code is implemented.
+
+Delivered a first substantive subset: dock/maintenance masters, plant truck/delivery-note policies, multi-order scheduled truck registration and tokens, arrival board/search/status, dock queue and exclusive active unloading, timestamped visit gates through exit, snapshotted binary arrival/pre-unloading checks with mandatory/pass gates and stage locks, one-pack-size/count plus loose-quantity receiving, delivery-note/visit provenance, and posted pack reconciliation. Receipts remain quality-held and atomic/idempotent on the existing immutable stock ledger. Direct quick receipts enforce the same plant policy. UI adds Truck & dock, Packed receipt and Receiving setup; original masters/quick receipt and branding remain.
+
+New additive migration: `20261016211846_ReceivingGate` (six scoped tables, receipt fields, scoped FKs/xmin/unique indexes, allowed state and pack checks). No old balances or movements rewritten. Required truck/note policies default off for existing plants. RECEIVING_CONTROL.md records actual API/permission/state contracts and operator steps.
+
+Executed validation:
+
+- `dotnet test tests/GreenInk.Api.Tests.csproj --configuration Release`: **23 passed,0 failed,0 skipped**,39s. Four new tests cover visit/receipt retries, changed-payload rejection, pack/math/outstanding validation, gates/snapshots/locks/maintenance/exit, Viewer and cross-plant restrictions, composite FK enforcement, queued/concurrent dock starts, and upgrading a populated previous receipt schema without changing balances/ledger protection.
+- `npm run test:e2e` in apps/web: **3 passed**,26.1s, real Chromium/API/PostgreSQL. Foundation and full prior operational lifecycle pass; new inbound test drives setup→truck/checks/dock→calculated25kg receipt→exit and verifies Hold stock. Mobile setup screenshot visually inspected at390px.
+- `npm --prefix apps/web run build`: TypeScript/Vite passed. API/test Release build passes. No dependency added.
+- `git diff --check`: passed. Full Docker Compose/API-image boot not rerun; previous cloud Microsoft registry CDN403 constraint remains. The updated native API applied migration and reported `/health/ready` ready. No Windows filesystem or production deployment accessed.
+
+This stage does **not** complete Vegam feature parity or all original inbound requirements. Multiline PO/delivery planning, full checklist designer, invoice blind counts, COA, sampling, mixed-pack/draft receipts, bulk/sand/random weighing, import/STO/toller, advanced put-away/returns, ERP and physical adapters remain pending. See the full map and open policy decisions. No unavailable mode is labelled implemented.
+
+Git delivery: committed with message `Next Phase`; attempted normal `git push origin HEAD:main`, rejected HTTP403 repository write permission denied. Remote main remains verified `26dca52`. A verified incremental `GreenInk-Inbound-Control.bundle` includes this complete stage for import using the user's working Windows Git credentials. No force push or private file transfer. See GIT_SYNC.md; GitHub synchronization is pending that handoff.

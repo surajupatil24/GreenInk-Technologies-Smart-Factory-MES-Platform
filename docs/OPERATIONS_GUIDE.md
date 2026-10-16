@@ -101,3 +101,7 @@ Select a released order in Material Preparation or Complete production to view i
 The source-pallet picker shows only released, unexpired raw materials still required by that order. Active reservations offered for issue/cancel follow the selected order. Reservation is not issue: when Still to reserve is zero but Still to issue is positive, issue the existing reservations.
 
 Completion closes the entire order. The button stays disabled until all saved BOM quantities have been issued and good output plus **actual** scrap equals planned output. Partial confirmations are not implemented. Do not invent scrap to reconcile a short production run. For example, planned25 does not accept good15 + scrap0; good24 + actual scrap1 accounts for25, but still requires all saved raw-material quantities issued. The BOM raw quantities are independent of the finished output quantity. No schema migration or alteration of existing order/stock records is required by this visibility improvement.
+
+## Inbound expansion: receiving control
+
+Inbound now adds Truck & dock, Packed receipt and Receiving setup. Follow RECEIVING_CONTROL.md for the actual gate-to-receipt sequence and API contracts. INBOUND_REQUIREMENTS.md maps the entire supplied manual and distinguishes this first implemented subset from remaining enterprise workflows. Settings apply to all receipt API paths, not only the new screens. Rebuild API and web; keep private environment and database volumes.

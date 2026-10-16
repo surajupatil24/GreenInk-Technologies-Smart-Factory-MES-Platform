@@ -77,6 +77,12 @@ public class GoodsReceipt : IPlantRow
     public decimal Quantity { get; set; }
     public Guid CommandId { get; set; }
     public string SupplierBatch { get; set; } = "";
+    public Guid? TruckVisitId { get; set; }
+    public string DeliveryNote { get; set; } = "";
+    public decimal? PackSize { get; set; }
+    public int? PackCount { get; set; }
+    public decimal LooseQuantity { get; set; }
+
 }
 
 public class Batch : IPlantRow

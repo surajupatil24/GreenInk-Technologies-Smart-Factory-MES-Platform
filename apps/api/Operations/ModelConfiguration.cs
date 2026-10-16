@@ -7,6 +7,56 @@ public static class OperationsModel
     public static void Configure(ModelBuilder b)
     {
         b.Entity<Plant>().HasAlternateKey(x => new { x.TenantId, x.Id });
+        Row<ReceivingPolicy>(b);
+        Row<DockStation>(b);
+        Row<ReceivingCheck>(b);
+        Row<TruckVisit>(b);
+        Row<TruckOrder>(b);
+        Row<TruckCheckAnswer>(b);
+        b.Entity<ReceivingPolicy>().HasIndex(x => new { x.TenantId, x.PlantId }).IsUnique();
+        Unique<DockStation>(b, "Code");
+        b.Entity<ReceivingCheck>()
+            .HasIndex(x => new
+            {
+                x.TenantId,
+                x.PlantId,
+                x.Prompt,
+                x.Stage,
+            })
+            .IsUnique();
+        b.Entity<GoodsReceipt>().Property(x => x.PackSize).HasPrecision(20, 6);
+        b.Entity<GoodsReceipt>()
+            .ToTable(t =>
+                t.HasCheckConstraint(
+                    "CK_Receipt_Packs",
+                    "(\"PackSize\" IS NULL AND \"PackCount\" IS NULL AND \"LooseQuantity\" = 0) OR (\"PackSize\" IS NOT NULL AND \"PackCount\" IS NOT NULL AND \"PackSize\" > 0 AND \"PackCount\" > 0 AND \"LooseQuantity\" >= 0 AND \"Quantity\" = \"PackSize\" * \"PackCount\" + \"LooseQuantity\")"
+                )
+            );
+        b.Entity<TruckVisit>()
+            .ToTable(t =>
+                t.HasCheckConstraint(
+                    "CK_Visit_Status",
+                    "\"Status\" IN ('Expected','Arrived','Docked','Unloading','Unloaded','Out')"
+                )
+            );
+        Unique<TruckVisit>(b, "Token");
+        Unique<TruckVisit>(b, "CommandId");
+        b.Entity<TruckVisit>().Property(x => x.OrderSignature).HasMaxLength(4000);
+        b.Entity<TruckCheckAnswer>().Property(x => x.Notes).HasMaxLength(2000);
+        b.Entity<TruckOrder>()
+            .HasIndex(x => new
+            {
+                x.TenantId,
+                x.PlantId,
+                x.TruckVisitId,
+                x.PurchaseOrderId,
+            })
+            .IsUnique();
+        Ref<TruckVisit, DockStation>(b, "DockStationId");
+        Ref<TruckOrder, TruckVisit>(b, "TruckVisitId");
+        Ref<TruckOrder, PurchaseOrder>(b, "PurchaseOrderId");
+        Ref<TruckCheckAnswer, TruckVisit>(b, "TruckVisitId");
+        Ref<GoodsReceipt, TruckVisit>(b, "TruckVisitId");
         Row<Material>(b);
         Row<Partner>(b);
         Row<WarehouseBin>(b);
