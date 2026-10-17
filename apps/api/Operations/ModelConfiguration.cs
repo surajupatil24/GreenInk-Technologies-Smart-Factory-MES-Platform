@@ -2,11 +2,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GreenInk;
 
-public static class OperationsModel
+public static partial class OperationsModel
 {
     public static void Configure(ModelBuilder b)
     {
         b.Entity<Plant>().HasAlternateKey(x => new { x.TenantId, x.Id });
+        ConfigureStaging(b);
         Row<ReceivingPolicy>(b);
         Row<DockStation>(b);
         Row<ReceivingCheck>(b);

@@ -185,6 +185,9 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
     form.getByRole("button", { name: "Complete production", exact: true }),
   ).toBeDisabled();
   await navigate("Material Preparation");
+  await page
+    .getByRole("button", { name: "Quick reservations", exact: true })
+    .click();
   form = section("Reserve material");
   await form
     .getByLabel("Released production order", { exact: true })

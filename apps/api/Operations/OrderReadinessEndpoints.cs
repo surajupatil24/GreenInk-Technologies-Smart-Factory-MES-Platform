@@ -71,7 +71,7 @@ public static class OrderReadinessEndpoints
                         select new
                         {
                             MaterialId = amounts.Key,
-                            Quantity = amounts.Sum(x => x.Quantity),
+                            Quantity = amounts.Sum(x => x.RequirementQuantity ?? x.Quantity),
                         }
                     ).ToDictionaryAsync(x => x.MaterialId, x => x.Quantity);
                     var issued = await (
@@ -83,7 +83,7 @@ public static class OrderReadinessEndpoints
                         select new
                         {
                             MaterialId = amounts.Key,
-                            Quantity = amounts.Sum(x => x.Quantity),
+                            Quantity = amounts.Sum(x => x.RequirementQuantity ?? x.Quantity),
                         }
                     ).ToDictionaryAsync(x => x.MaterialId, x => x.Quantity);
                     var now = DateTimeOffset.UtcNow;

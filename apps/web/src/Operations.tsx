@@ -1,3 +1,4 @@
+import { PreparationWorkspace } from "./PreparationWorkspace";
 import { InboundDesk } from "./InboundDesk";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -332,11 +333,16 @@ export function Operations({
   const selected = plant || fallback;
   return (
     <>
-      <span className="eyebrow">PLANT OPERATIONS · FUNCTIONAL CORE</span>
+      <span className="eyebrow">
+        {module === "preparation"
+          ? "SHOP FLOOR · MATERIAL READINESS"
+          : "PLANT OPERATIONS · FUNCTIONAL CORE"}
+      </span>
       <h1>{name}</h1>
       <p className="intro">
-        Persisted plant records and controlled transactions. Advanced workflows
-        remain on the product roadmap.
+        {module === "preparation"
+          ? "Plan the shift, prepare every material and deliver with confidence."
+          : "Persisted plant records and controlled transactions. Advanced workflows remain on the product roadmap."}
       </p>
       {!plant && (
         <label className="operation-context">
@@ -437,7 +443,7 @@ function ReadinessSummary({
             {[
               ["Required", line.requiredQuantity],
               ["Reserved, awaiting issue", line.reservedQuantity],
-              ["Already issued", line.issuedQuantity],
+              ["BOM requirement issued", line.issuedQuantity],
               ["Still to reserve", line.toReserve],
               ["Still to issue", line.toIssue],
               ["Released stock available", line.availableQuantity],
@@ -922,7 +928,7 @@ function PlantOperations({
         </>
       )}
       {module === "preparation" && (
-        <>
+        <PreparationWorkspace plantId={plantId} role={role}>
           <div className="operations-forms">
             {form(
               "Reserve material",
@@ -965,7 +971,7 @@ function PlantOperations({
             "palletId",
             "quantity",
           ])}
-        </>
+        </PreparationWorkspace>
       )}
       {module === "production" && (
         <>

@@ -193,6 +193,10 @@ public static class ExecutionEndpoints
                 }
                 var o = await Order(db, s, r.ProductionOrderId);
                 Ops.Check(o.Status == "Released", "Production order must be released.");
+                Ops.Check(
+                    !await Ops.Rows<StagingPlan>(db, s).AnyAsync(x => x.ProductionOrderId == o.Id),
+                    "This order has a staging plan. Use the guided picking workspace."
+                );
                 var pallet = await Get<Pallet>(db, s, r.PalletId);
                 var batch = await Get<Batch>(db, s, pallet.BatchId);
                 Usable(batch, "Raw");
@@ -213,7 +217,7 @@ public static class ExecutionEndpoints
                         a.ProductionOrderId == o.Id
                         && a.Status == "Reserved"
                         && c.MaterialId == batch.MaterialId
-                    select a.Quantity
+                    select a.RequirementQuantity ?? a.Quantity
                 ).SumAsync();
                 var used = await Used(db, s, o.Id, batch.MaterialId);
                 Ops.Check(
@@ -268,6 +272,24 @@ public static class ExecutionEndpoints
                     return Results.Ok(prior);
                 }
                 Ops.Check(row.Status == "Reserved", "Only reserved stock can be issued.");
+                if (row.StagingPickId.HasValue)
+                {
+                    var staged = await Get<StagingPick>(db, s, row.StagingPickId.Value);
+                    var plan = await Get<StagingPlan>(db, s, staged.StagingPlanId);
+                    var area = await Get<StagingArea>(db, s, plan.StagingAreaId);
+                    var bin = await Get<WarehouseBin>(db, s, area.SupplyBinId);
+                    var prepared = await Get<Pallet>(db, s, row.PalletId);
+                    Ops.Check(
+                        staged.Status == "Supply" && prepared.Location == bin.Code,
+                        "Deliver the prepared kit to its production supply bin before issuing."
+                    );
+                    Ops.Check(
+                        !await Ops.Rows<StagingStockIssue>(db, s)
+                            .AnyAsync(x => x.PalletId == row.PalletId && x.Status == "Open"),
+                        "Resolve the prepared stock issue before issuing."
+                    );
+                    staged.Status = "Issued";
+                }
                 var o = await Order(db, s, row.ProductionOrderId);
                 Ops.Check(o.Status == "Released", "Order must be released.");
                 var pallet = await Get<Pallet>(db, s, row.PalletId);
@@ -285,6 +307,7 @@ public static class ExecutionEndpoints
                         ProductionOrderId = o.Id,
                         PalletId = pallet.Id,
                         Quantity = row.Quantity,
+                        RequirementQuantity = row.RequirementQuantity,
                         CommandId = r.CommandId,
                     },
                     s
@@ -319,6 +342,10 @@ public static class ExecutionEndpoints
                 if (row.Status == "Cancelled")
                     return Results.Ok(row);
                 Ops.Check(row.Status == "Reserved", "Only reserved stock can be cancelled.");
+                Ops.Check(
+                    row.StagingPickId is null,
+                    "Use the guided return action to cancel a staged allocation and restore its stock."
+                );
                 var pallet = await Get<Pallet>(db, s, row.PalletId);
                 Ops.Check(
                     pallet.ReservedQuantity >= row.Quantity,
@@ -368,6 +395,13 @@ public static class ExecutionEndpoints
                 Ops.Check(
                     o.Status == "Released",
                     "Order must be released and not previously completed."
+                );
+                Ops.Check(
+                    !await Ops.Rows<StagingPlan>(db, s)
+                        .AnyAsync(x =>
+                            x.ProductionOrderId == id && x.ApprovalRequired && !x.Approved
+                        ),
+                    "Engineering approval is pending for this order's staging plan."
                 );
                 Ops.Check(
                     r.Quantity + r.ScrapQuantity == o.PlannedQuantity,
@@ -641,7 +675,7 @@ public static class ExecutionEndpoints
             join b in Ops.Rows<Pallet>(db, s) on a.PalletId equals b.Id
             join c in Ops.Rows<Batch>(db, s) on b.BatchId equals c.Id
             where a.ProductionOrderId == order && c.MaterialId == material
-            select a.Quantity
+            select a.RequirementQuantity ?? a.Quantity
         ).SumAsync();
 
     static StockMovement Move(

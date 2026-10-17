@@ -576,6 +576,7 @@ app.MapInboundInventory();
 app.MapExecution();
 app.MapOrderReadiness();
 app.MapReceiving();
+app.MapStaging();
 app.MapInsights();
 app.Run();
 static ClaimsPrincipal SessionPrincipal(User u, Guid sessionId) =>

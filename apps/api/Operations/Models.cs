@@ -82,7 +82,6 @@ public class GoodsReceipt : IPlantRow
     public decimal? PackSize { get; set; }
     public int? PackCount { get; set; }
     public decimal LooseQuantity { get; set; }
-
 }
 
 public class Batch : IPlantRow
@@ -158,6 +157,7 @@ public class BomLine : IPlantRow
 
 public class Reservation : IPlantRow
 {
+    public Guid? StagingPickId { get; set; }
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TenantId { get; set; }
     public Guid PlantId { get; set; }
@@ -166,6 +166,7 @@ public class Reservation : IPlantRow
     public Guid ProductionOrderId { get; set; }
     public Guid PalletId { get; set; }
     public decimal Quantity { get; set; }
+    public decimal? RequirementQuantity { get; set; }
     public string Status { get; set; } = "Reserved";
     public Guid CommandId { get; set; }
 }
@@ -180,6 +181,7 @@ public class Consumption : IPlantRow
     public Guid ProductionOrderId { get; set; }
     public Guid PalletId { get; set; }
     public decimal Quantity { get; set; }
+    public decimal? RequirementQuantity { get; set; }
     public Guid CommandId { get; set; }
 }
 

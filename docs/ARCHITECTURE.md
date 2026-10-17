@@ -21,3 +21,9 @@ Transactional outbox, RabbitMQ, S3 storage, TimescaleDB and industrial adapters 
 ## Quality gates
 
 Foundation checks include API build/tests and frontend typecheck/build. PostgreSQL migration, cookie/session behavior, cross-tenant access, cross-plant access, browser workflows, Compose startup, and recovery need direct validation. Later milestones add transaction rollback, idempotency, concurrency, accessibility, E2E, security and load checks. A successful unit build alone does not demonstrate production readiness.
+
+## Guided Material Preparation
+
+Staging adds plant-scoped area/rule/plan/pick/measurement/request/issue/Kanban entities in the same transactional database. A dedicated allocation is a real pallet of its original batch, with a linked reservation. Splits append equal negative/positive movements; kit delivery appends a zero-quantity location event. Issue consumes physical quantity while recording a nullable nominal requirement credit for tolerance/correction-factor accounting. Historical records default to physical quantity. Production readiness uses credit; inventory/reporting retains physical balances. Rule/factor versions protect open forms, and each posted pick retains its configuration snapshot.
+
+StagingCommand stores a scoped unique command ID, payload hash, action/result and optional plan link. Serializable transactions/xmin include the command, balances, reservations, measurements and ledger changes. Discrepancy reports are separate from manager-reviewed adjustments. No external queue/device response is invented. MATERIAL_PREPARATION_GUIDE.md describes the actual API/state boundaries; MATERIAL_PREPARATION_REQUIREMENTS.md records the supplied manual's full remaining scope and UAT decisions.

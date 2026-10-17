@@ -23,3 +23,7 @@ The connected core across milestones2–7 is implemented and validated with18 Po
 4. Manufacturing/quality/dispatch expansion: versioned BOM/routings, equipment/shift capture, process tests/nonconformance, sales/pick-pack/load scans and shipping documents.
 5. Printer/ERP/device adapters require approved connection details and environment testing. Extend local contracts before claiming external delivery.
 6. Complete pagination, dependency/license review, accessibility/load/security testing, observability, recovery/UAT and production approval before external release.
+
+## Material Preparation coverage update — 17 October2026
+
+The new order-focused local staging workspace now connects scheduled/approved plans, scan-verified stock, separate/combined/pick-only preparation, manual tolerance/correction-factor weighing, kit delivery/issue/return, replenishment, static/open-plan Kanban and reviewed discrepancies. This advances the staging core, not the full172-page reference scope. Use MATERIAL_PREPARATION_REQUIREMENTS.md (MP-01–MP-33) as the current feature inventory and MATERIAL_PREPARATION_GUIDE.md for verified contracts. Grouping/resource calendars, thermal preprocessing, ASRS/AGV, external warehouse/STO/DN, spreadsheets, physical adapters and production hardening remain open. Earlier roadmap statuses describe earlier baselines.

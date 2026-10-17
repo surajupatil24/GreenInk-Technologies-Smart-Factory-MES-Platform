@@ -105,3 +105,8 @@ Completion closes the entire order. The button stays disabled until all saved BO
 ## Inbound expansion: receiving control
 
 Inbound now adds Truck & dock, Packed receipt and Receiving setup. Follow RECEIVING_CONTROL.md for the actual gate-to-receipt sequence and API contracts. INBOUND_REQUIREMENTS.md maps the entire supplied manual and distinguishes this first implemented subset from remaining enterprise workflows. Settings apply to all receipt API paths, not only the new screens. Rebuild API and web; keep private environment and database volumes.
+
+
+## Material Preparation workspace
+
+Material Preparation now opens an order-focused workspace with planning, scan-verified picking, manual gross/tare/net kitting, tolerance/factor snapshots, kit delivery/issue, allocation returns, replenishment, static/open-plan-demand Kanban and manager-reviewed stock discrepancies. Quick reservations remain a secondary path for unplanned orders. Read MATERIAL_PREPARATION_GUIDE.md for operator steps and contracts; MATERIAL_PREPARATION_REQUIREMENTS.md maps the supplied172-page manual and remaining features. Physical consumption and nominal BOM credit are distinct for guided allocations. Rebuild both API and web; preserve the existing private environment and database volumes.

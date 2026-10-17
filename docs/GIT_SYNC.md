@@ -1,3 +1,26 @@
+# Material Preparation update — 17 October2026
+
+The preparation expansion is committed after the earlier local Inbound commit `5de065a`, with requested message `Next Phase`. Remote reads currently fail because this cloud session has no usable GitHub credential (Git asks for Username and cannot prompt). The last verified/cached main baseline is `26dca52`; current remote state cannot be reverified from this session. The authorized `git push origin HEAD:main` was attempted and failed: `could not read Username for https://github.com: No such device or address`. This session cannot authenticate to push; synchronization is not confirmed. The verified bundle preserves the full local chain for the Windows handoff.
+
+If direct push is unavailable, download `GreenInk-Material-Preparation.bundle` to Downloads. It includes **both** the earlier Inbound commit and this Material Preparation update, preserving the full local change chain after `26dca52`. If Inbound was already imported locally, Git still fast-forwards to the new child commit. Run each command separately and stop on an error:
+
+```powershell
+cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
+git fetch "$HOME\Downloads\GreenInk-Material-Preparation.bundle" HEAD
+git merge --ff-only FETCH_HEAD
+git push origin HEAD:main
+```
+
+Back up the database, then rebuild API and web while retaining `.env` and volumes:
+
+```powershell
+docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --build
+```
+
+Read MATERIAL_PREPARATION_GUIDE.md for new workflows and MATERIAL_PREPARATION_REQUIREMENTS.md for exact feature coverage and pending scope. This is an expansion, not complete manual/vendor parity. SourceZIP was not reviewed (>32MiB tool transfer limit). No force push/reset/automatic stash or production deployment is part of the handoff.
+
+---
+
 # Latest inbound receiving update
 
 Remote main was directly fetched and verified at `26dca52` before this phase. Receiving control is prepared on top of that baseline with the requested commit message `Next Phase`. The older handoffs below are historical and do not describe the latest baseline. The direct push for this phase was attempted and rejected by GitHub with HTTP403 (repository write permission denied). Remote main remains `26dca52`; it is not synchronized with this new phase. The verified incremental `GreenInk-Inbound-Control.bundle` preserves all phase changes for import/push using the user's Windows Git credentials.

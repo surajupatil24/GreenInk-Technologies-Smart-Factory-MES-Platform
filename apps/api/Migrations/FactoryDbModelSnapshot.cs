@@ -110,6 +110,54 @@ namespace GreenInk.Api.Migrations
                     b.ToTable("Batch");
                 });
 
+            modelBuilder.Entity("GreenInk.BatchStagingFactor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "BatchId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.ToTable("BatchStagingFactor", t =>
+                        {
+                            t.HasCheckConstraint("CK_BatchStagingFactor_Staging", "\"Factor\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("GreenInk.BomLine", b =>
                 {
                     b.Property<Guid>("Id")
@@ -183,6 +231,10 @@ namespace GreenInk.Api.Migrations
                         .HasPrecision(20, 6)
                         .HasColumnType("numeric(20,6)");
 
+                    b.Property<decimal?>("RequirementQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -208,6 +260,8 @@ namespace GreenInk.Api.Migrations
                     b.ToTable("Consumption", t =>
                         {
                             t.HasCheckConstraint("CK_Consumption_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_Consumption_Staging", "\"RequirementQuantity\" IS NULL OR \"RequirementQuantity\" > 0");
                         });
                 });
 
@@ -504,6 +558,67 @@ namespace GreenInk.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("IntegrationMessage");
+                });
+
+            modelBuilder.Entity("GreenInk.KanbanPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("LowStock")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("MaxStock")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ReorderStock")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId");
+
+                    b.HasIndex("TenantId", "PlantId", "BinId", "MaterialId")
+                        .IsUnique();
+
+                    b.ToTable("KanbanPolicy", t =>
+                        {
+                            t.HasCheckConstraint("CK_KanbanPolicy_Staging", "\"LowStock\" >= 0 AND \"LowStock\" <= \"ReorderStock\" AND \"ReorderStock\" <= \"MaxStock\" AND \"MaxStock\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("GreenInk.LabelTemplate", b =>
@@ -1132,6 +1247,77 @@ namespace GreenInk.Api.Migrations
                     b.ToTable("ReceivingPolicy");
                 });
 
+            modelBuilder.Entity("GreenInk.ReplenishmentRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DestinationBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("FulfilledQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("StagingPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "DestinationBinId");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId");
+
+                    b.HasIndex("TenantId", "PlantId", "StagingPlanId");
+
+                    b.ToTable("ReplenishmentRequest", t =>
+                        {
+                            t.HasCheckConstraint("CK_ReplenishmentRequest_Staging", "\"Quantity\" > 0 AND \"FulfilledQuantity\" >= 0 AND \"FulfilledQuantity\" <= \"Quantity\"");
+                        });
+                });
+
             modelBuilder.Entity("GreenInk.Reservation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1156,6 +1342,13 @@ namespace GreenInk.Api.Migrations
                     b.Property<decimal>("Quantity")
                         .HasPrecision(20, 6)
                         .HasColumnType("numeric(20,6)");
+
+                    b.Property<decimal?>("RequirementQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid?>("StagingPickId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1184,9 +1377,13 @@ namespace GreenInk.Api.Migrations
 
                     b.HasIndex("TenantId", "PlantId", "ProductionOrderId");
 
+                    b.HasIndex("TenantId", "PlantId", "StagingPickId");
+
                     b.ToTable("Reservation", t =>
                         {
                             t.HasCheckConstraint("CK_Reservation_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_Reservation_Staging", "\"RequirementQuantity\" IS NULL OR \"RequirementQuantity\" > 0");
                         });
                 });
 
@@ -1246,6 +1443,470 @@ namespace GreenInk.Api.Migrations
                         {
                             t.HasCheckConstraint("CK_Shipment_Positive", "\"Quantity\" > 0");
                         });
+                });
+
+            modelBuilder.Entity("GreenInk.StagingArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StagingBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SupplyBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Workflow")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "StagingBinId");
+
+                    b.HasIndex("TenantId", "PlantId", "SupplyBinId");
+
+                    b.ToTable("StagingArea");
+                });
+
+            modelBuilder.Entity("GreenInk.StagingCommand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ResultId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid?>("StagingPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CommandId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "StagingPlanId");
+
+                    b.ToTable("StagingCommand");
+                });
+
+            modelBuilder.Entity("GreenInk.StagingMeasurement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("ExpectedQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<decimal>("Gross")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<decimal>("Net")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScaleReference")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("StagingPickId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Tare")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "StagingPickId");
+
+                    b.ToTable("StagingMeasurement", t =>
+                        {
+                            t.HasCheckConstraint("CK_StagingMeasurement_Staging", "\"Gross\" > \"Tare\" AND \"Tare\" >= 0 AND \"Net\" = \"Gross\" - \"Tare\" AND \"ExpectedQuantity\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.StagingPick", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CorrectionFactor")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CurrentPalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HandlingNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PickedPalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("PreweighRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<decimal>("RequirementQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("SafetyNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("SourcePalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StagingPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TolerancePercent")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "CurrentPalletId");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId");
+
+                    b.HasIndex("TenantId", "PlantId", "PickedPalletId");
+
+                    b.HasIndex("TenantId", "PlantId", "SourcePalletId");
+
+                    b.HasIndex("TenantId", "PlantId", "StagingPlanId");
+
+                    b.ToTable("StagingPick", t =>
+                        {
+                            t.HasCheckConstraint("CK_StagingPick_Staging", "\"Quantity\" > 0 AND \"RequirementQuantity\" > 0 AND \"CorrectionFactor\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.StagingPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApprovalNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("ApprovalRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("KitCode")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Priority")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductionOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StagingAreaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Workflow")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "KitCode")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionOrderId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "StagingAreaId");
+
+                    b.ToTable("StagingPlan");
+                });
+
+            modelBuilder.Entity("GreenInk.StagingRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("CorrectionRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HandlingNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PackSize")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("PreweighRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SafetyNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TolerancePercent")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId")
+                        .IsUnique();
+
+                    b.ToTable("StagingRule", t =>
+                        {
+                            t.HasCheckConstraint("CK_StagingRule_Staging", "\"PackSize\" >= 0 AND \"TolerancePercent\" >= 0 AND \"TolerancePercent\" <= 100");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.StagingStockIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("CountedQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("PalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Resolution")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<decimal>("SystemQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "PalletId");
+
+                    b.ToTable("StagingStockIssue");
                 });
 
             modelBuilder.Entity("GreenInk.StockMovement", b =>
@@ -1634,8 +2295,6 @@ namespace GreenInk.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("TenantId", "PlantId", "Id");
-
                     b.HasIndex("TenantId", "PlantId", "Code")
                         .IsUnique();
 
@@ -1665,6 +2324,23 @@ namespace GreenInk.Api.Migrations
                         .HasForeignKey("TenantId", "PlantId", "ProductionOrderId")
                         .HasPrincipalKey("TenantId", "PlantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GreenInk.BatchStagingFactor", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Batch", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "BatchId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GreenInk.BomLine", b =>
@@ -1809,6 +2485,30 @@ namespace GreenInk.Api.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "PlantId")
                         .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.KanbanPolicy", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.WarehouseBin", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "BinId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -2010,6 +2710,36 @@ namespace GreenInk.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GreenInk.ReplenishmentRequest", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.WarehouseBin", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "DestinationBinId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.StagingPlan", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingPlanId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("GreenInk.Reservation", b =>
                 {
                     b.HasOne("GreenInk.Plant", null)
@@ -2032,6 +2762,12 @@ namespace GreenInk.Api.Migrations
                         .HasPrincipalKey("TenantId", "PlantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("GreenInk.StagingPick", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingPickId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("GreenInk.Shipment", b =>
@@ -2047,6 +2783,166 @@ namespace GreenInk.Api.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "PlantId", "DeliveryOrderId")
                         .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "PalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingArea", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.WarehouseBin", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingBinId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.WarehouseBin", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "SupplyBinId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingCommand", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.StagingPlan", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingPlanId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GreenInk.StagingMeasurement", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.StagingPick", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingPickId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingPick", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "CurrentPalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "PickedPalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "SourcePalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.StagingPlan", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingPlanId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingPlan", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionOrder", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionOrderId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.StagingArea", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "StagingAreaId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingRule", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.StagingStockIssue", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

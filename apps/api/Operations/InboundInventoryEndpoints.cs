@@ -482,8 +482,18 @@ public static class InboundInventoryEndpoints
                 var pallet = await Ops.Rows<Pallet>(db, s)
                     .SingleOrDefaultAsync(x => x.Id == r.PalletId);
                 Ops.Check(pallet is not null, "Pallet not found in this plant.");
+                Ops.Check(
+                    !await Ops.Rows<Reservation>(db, s)
+                        .AnyAsync(x =>
+                            x.PalletId == r.PalletId
+                            && x.StagingPickId != null
+                            && x.Status == "Reserved"
+                        ),
+                    "Use guided staging delivery or return for an allocated preparation pallet."
+                );
                 Ops.Check(pallet!.Quantity > 0, "Cannot transfer an empty pallet.");
                 Ops.Check(pallet.Location != location, "Pallet is already at that location.");
+                await StagingEndpoints.CheckCapacity(db, s, pallet, location, pallet.Quantity);
                 var movement = Ops.Stamp(
                     new StockMovement
                     {
