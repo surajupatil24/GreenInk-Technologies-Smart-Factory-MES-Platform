@@ -195,3 +195,27 @@ An initial browser run immediately after restarting the native API encountered a
 
 
 Git delivery: committed with the requested `Next Phase` message. Authorized normal push to `origin HEAD:main` was attempted and rejected by GitHub: **Invalid username or token**. Remote synchronization remains unverified. A self-contained verified `GreenInk-Manufacturing.bundle` preserves the entire commit history, including prior Inbound and Material Preparation work; no credentials/build outputs/reference uploads are included. Reconnect the repository GitHub write connection to enable direct pushes.
+
+
+## Dispatch expansion — 17 October 2026
+
+Implemented original planning, pick/pack, loading, handling-unit and setup views while preserving Orders & shipments. The full25-page Dispatch manual and selected authorized source logic informed implementation; DISPATCH_REQUIREMENTS.md records exact DS-01–DS-32 coverage and gaps. No vendor source/assets were copied.
+
+Delivered scoped area/package/warehouse setup, versioned customer instruction snapshots, single/group picking, optional overpick with mandatory reconciliation, grouped existing delivery orders or shuttle material lines, assigned operators, priority/schedule/reassignment, quality/shelf-life/PPE/scan gates, real reserved split pallets, local HUs and package/temperature-serial/gross-weight checks, truck/loading, manager local issue, and unload/unpack/return/cancel/whole-run quarantined reversal. Immutable history and net shipped reporting preserve original issue records. Legacy quick routes cannot bypass claims/reservations. Additive migration20261017154322_GuidedDispatch creates twelve scoped tables, composite constraints and append-only triggers.
+
+Executed validation:
+
+| Check | Result |
+|---|---|
+| `python /tmp/run_greenink.py test` → Release dotnet test with real PostgreSQL | **45 passed,0 failed,0 skipped**,54s; includes eight new Dispatch tests |
+| Dispatch API/database coverage | Group/mixed-UOM conservation; overpick return; scans/PPE/temp/gross gates; permission/assignment/replay revocation; foreign scope/FK denial; shelf-life/unknown-expiry; concurrent stock picks/exclusive delivery claims; unload/unpack/cancel; local shuttle/previous-schema upgrade; quality recheck/concurrent PGI; instruction snapshots/product rules; immutable SQL history; quarantined reversal/net reporting |
+| `npm --prefix apps/web run build` | TypeScript/Vite passed; Dispatch lazy-loaded |
+| `python /tmp/run_greenink.py browser` | **6 passed**,48.4s: foundation, Inbound, Material Preparation, manufacturing/lab/finished stock, existing lifecycle and new guided Dispatch |
+| Dispatch browser workflow | Real FG production/release, setup/instructions, two grouped delivery picks, HU packing/temp/gross/QR, loading/local issue, whole-run reversal, net reports/history CSV;390px dark/mobile without horizontal overflow |
+| Visual review | Desktop and mobile Dispatch screenshots inspected; Green Ink branding retained |
+| Native readiness | HTTP200 `/health/ready`, isolated PostgreSQL; no Windows/production database accessed |
+| `git diff --check` | Passed |
+
+The complete browser run passed after readiness was confirmed. Temporary credentials, reference attachments, test data, dependencies and screenshots are outside tracked source. No full Docker image build, remote CI, production deployment or live ERP/hardware execution is claimed. Full manual/vendor parity remains open, especially external integrations, advanced calendars/permissions, spreadsheets, preprinted/nested HUs and IBC cycles, multi-line SAP DN ingestion, SSCC/commercial documents and production hardening/UAT. See the requirement map for details.
+
+Git delivery: committed as **Next Phase**. Normal authorized `git push origin HEAD:main` was rejected: **Invalid username or token. Password authentication is not supported for Git operations.** GitHub synchronization is not confirmed. The self-contained verified `GreenInk-Dispatch.bundle` preserves the entire local history, including prior phases. Reconnect the GitHub write connection to restore direct pushing; never paste tokens into chat. Import with the ordinary merge in DISPATCH_GUIDE.md to preserve divergent laptop commits.

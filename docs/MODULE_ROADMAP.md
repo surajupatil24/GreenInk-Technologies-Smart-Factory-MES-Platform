@@ -32,3 +32,8 @@ The new order-focused local staging workspace now connects scheduled/approved pl
 ## Manufacturing, Quality and Finished Goods coverage update — 17 October 2026
 
 The original execution/lab/finished-stock workspaces now connect versioned SOPs, schedule/reschedule and exclusive resources, linear phases/checklists/manual numeric limits, pause/resume timing, sample handover/testing/retest/review, deviation investigation, gated batch disposition, output batch/expiry, same-batch packing and scan putaway. See MANUFACTURING_REQUIREMENTS.md (PR/QC/FG/X map) and MANUFACTURING_GUIDE.md. Full reference parity remains unverified: the manufacturing PDF exceeds the32MiB transfer limit. Partial completion, dynamic rework/addition/parallel workflows, secondary resources/calendars, advanced packaging/by-products/HUs, COA/LIMS/ERP/DCS/physical printers and production hardening remain open. Existing baseline roadmap entries are historical, not claims that these new slices remain entirely unimplemented.
+
+
+## Dispatch coverage update — 17 October 2026
+
+Connected local configuration/instructions, assigned customer/shuttle plans, scan-verified single/group picks, HU packing/weights/serial references, loading, local issue and auditable unload/unpack/return/cancel/reversal are implemented. DISPATCH_REQUIREMENTS.md maps DS-01–DS-32 to the supplied manual; DISPATCH_GUIDE.md defines operator/accounting boundaries. Full parity is not complete: SAP/ERP, destination receipt, live RFID/telemetry/scales/printers, GS1 SSCC, spreadsheet masters, preprinted/nested HUs/IBC cycles, multi-line DN ingestion, picker groups/fine area grants, route optimization, commercial documents, pagination, production hardening and plant UAT remain open.

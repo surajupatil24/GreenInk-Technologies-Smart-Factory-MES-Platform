@@ -491,6 +491,7 @@ public static class InboundInventoryEndpoints
                         ),
                     "Use guided staging delivery or return for an allocated preparation pallet."
                 );
+                await DispatchEndpoints.CheckFreeMovement(db, s, pallet!.Id);
                 Ops.Check(pallet!.Quantity > 0, "Cannot transfer an empty pallet.");
                 Ops.Check(pallet.Location != location, "Pallet is already at that location.");
                 await StagingEndpoints.CheckCapacity(db, s, pallet, location, pallet.Quantity);

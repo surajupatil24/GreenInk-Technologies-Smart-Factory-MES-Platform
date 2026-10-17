@@ -624,6 +624,7 @@ public static class ExecutionEndpoints
                 }
                 var o = await Get<DeliveryOrder>(db, s, r.DeliveryOrderId);
                 Ops.Check(o.Status == "Open", "Delivery order is not open.");
+                Ops.Check(!await Ops.Rows<DispatchRunLine>(db,s).AnyAsync(x=>x.DeliveryOrderId==o.Id && x.Active), "Delivery order is assigned to guided dispatch. Use its goods-issue workflow.");
                 Ops.Check(
                     r.Quantity == o.Quantity,
                     "Initial workflow requires shipping the complete delivery quantity."

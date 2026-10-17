@@ -1,3 +1,7 @@
+import { lazy, Suspense } from "react";
+const DispatchWorkspace = lazy(() =>
+  import("./DispatchWorkspace").then((m) => ({ default: m.DispatchWorkspace })),
+);
 import { ManufacturingWorkspace } from "./ManufacturingWorkspace";
 import { PreparationWorkspace } from "./PreparationWorkspace";
 import { InboundDesk } from "./InboundDesk";
@@ -343,7 +347,9 @@ export function Operations({
               ? "QUALITY MANAGEMENT"
               : module === "finished-goods"
                 ? "WAREHOUSE · FINISHED GOODS"
-                : "PLANT OPERATIONS · FUNCTIONAL CORE"}
+                : module === "dispatch"
+                  ? "OUTBOUND · DISPATCH CONTROL"
+                  : "PLANT OPERATIONS · FUNCTIONAL CORE"}
       </span>
       <h1>{name}</h1>
       <p className="intro">
@@ -355,7 +361,9 @@ export function Operations({
               ? "Follow samples, investigate deviations and release material with recorded evidence."
               : module === "finished-goods"
                 ? "Keep finished batches, packed pallets and warehouse locations connected."
-                : "Persisted plant records and controlled transactions. Advanced workflows remain on the product roadmap."}
+                : module === "dispatch"
+                  ? "Plan shipments, verify every allocation and dispatch with a complete stock trail."
+                  : "Persisted plant records and controlled transactions. Advanced workflows remain on the product roadmap."}
       </p>
       {!plant && (
         <label className="operation-context">
@@ -1221,56 +1229,58 @@ function PlantOperations({
         </ManufacturingWorkspace>
       )}
       {module === "dispatch" && (
-        <>
-          <div className="operations-forms">
-            {form("Create delivery order", "delivery-orders", [
-              text("number", "Delivery order number"),
-              choice("customerId", "Customer", customers),
-              choice("materialId", "Finished material", finished),
-              num("quantity", "Delivery quantity"),
-            ])}
-            {form(
-              "Confirm shipment",
-              "shipments",
-              [
-                choice(
-                  "deliveryOrderId",
-                  "Open delivery order",
-                  options("delivery-orders", (r) => r.status === "Open"),
-                ),
-                choice(
-                  "palletId",
-                  "Finished pallet",
-                  options("pallets", (p) =>
-                    data.batches.some(
-                      (b) => b.id === p.batchId && b.kind === "Finished",
+        <Suspense fallback={<p>Loading dispatch workspace…</p>}>
+          <DispatchWorkspace plantId={plantId} role={role} data={data}>
+            <div className="operations-forms">
+              {form("Create delivery order", "delivery-orders", [
+                text("number", "Delivery order number"),
+                choice("customerId", "Customer", customers),
+                choice("materialId", "Finished material", finished),
+                num("quantity", "Delivery quantity"),
+              ])}
+              {form(
+                "Confirm shipment",
+                "shipments",
+                [
+                  choice(
+                    "deliveryOrderId",
+                    "Open delivery order",
+                    options("delivery-orders", (r) => r.status === "Open"),
+                  ),
+                  choice(
+                    "palletId",
+                    "Finished pallet",
+                    options("pallets", (p) =>
+                      data.batches.some(
+                        (b) => b.id === p.batchId && b.kind === "Finished",
+                      ),
                     ),
                   ),
-                ),
-                num("quantity", "Shipment quantity"),
-                text("truck", "Truck registration"),
-              ],
-              false,
-              undefined,
-              undefined,
-              "Released, unexpired finished stock only. The core workflow ships the entire delivery quantity from one pallet.",
-            )}
-          </div>
-          {table("delivery-orders", "Delivery orders", [
-            "number",
-            "customerId",
-            "materialId",
-            "quantity",
-            "status",
-          ])}
-          {table("shipments", "Confirmed shipments", [
-            "createdAt",
-            "deliveryOrderId",
-            "palletId",
-            "quantity",
-            "truck",
-          ])}
-        </>
+                  num("quantity", "Shipment quantity"),
+                  text("truck", "Truck registration"),
+                ],
+                false,
+                undefined,
+                undefined,
+                "Released, unexpired finished stock only. The core workflow ships the entire delivery quantity from one pallet.",
+              )}
+            </div>
+            {table("delivery-orders", "Delivery orders", [
+              "number",
+              "customerId",
+              "materialId",
+              "quantity",
+              "status",
+            ])}
+            {table("shipments", "Confirmed shipments", [
+              "createdAt",
+              "deliveryOrderId",
+              "palletId",
+              "quantity",
+              "truck",
+            ])}
+          </DispatchWorkspace>
+        </Suspense>
       )}
       {module === "traceability" && (
         <TraceView plantId={plantId} batches={batches} />
