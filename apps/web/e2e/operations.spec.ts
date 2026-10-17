@@ -73,6 +73,10 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
       await page
         .getByRole("tab", { name: "Batch decisions", exact: true })
         .click();
+    if (name === "Dispatch")
+      await page
+        .getByRole("tab", { name: "Orders & shipments", exact: true })
+        .click();
     if (name === "Finished Goods")
       await page
         .getByRole("tab", { name: "Inventory records", exact: true })

@@ -34,3 +34,8 @@
 | 2026-10-17 | Snapshot published SOP phases and quality tests; keep lab review separate from stock release | Configuration revisions must not rewrite active execution or sample obligations. Existing direct completion/release routes enforce the same gates. |
 | 2026-10-17 | Persist out-of-range evidence and manager-reviewed deviations instead of silently overwriting readings | Corrected values retain history; retests preserve failed samples; closing a case does not automatically pass or release stock. |
 | 2026-10-17 | Keep whole-order output reconciliation and add conservative same-batch packing | Avoid inventing partial/rework consumption semantics. Packing conserves existing stock with paired movements; physical packaging consumption and partial production remain explicit gaps. |
+
+| 2026-10-17 | Build original Dispatch from the readable25-page manual and selected authorized DAL/service references | Page-level coverage distinguishes completed local workflows from vendor/external gaps; source code/assets are not copied. |
+| 2026-10-17 | Use reserved dedicated pick pallets and snapshotted policies/instructions/packages | Preserves stock conservation and historical obligations; all delivery lines reconcile exactly before issue, even when overpick is enabled. |
+| 2026-10-17 | Preserve issue history through append-only whole-run reversal | Manager confirms physical return; stock is restored on hold and reports net reversals without deleting shipments. External PGI/reversal is never simulated. |
+| 2026-10-17 | Import full phase bundle by ordinary merge if cloud authentication fails | Preserves the laptop's divergent Inbound video commit; no force push/reset or claim of remote synchronization. |

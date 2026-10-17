@@ -1,3 +1,11 @@
+# Latest Dispatch handoff — 17 October 2026
+Git delivery: committed as **Next Phase**. Normal authorized `git push origin HEAD:main` was rejected: **Invalid username or token. Password authentication is not supported for Git operations.** GitHub synchronization is not confirmed. The self-contained verified `GreenInk-Dispatch.bundle` preserves the entire local history, including prior phases. Reconnect the GitHub write connection to restore direct pushing; never paste tokens into chat. Import with the ordinary merge in DISPATCH_GUIDE.md to preserve divergent laptop commits.
+
+
+The current phase uses commit message **Next Phase**. The self-contained **GreenInk-Dispatch.bundle** includes all prior local phases and has no prerequisite commit. It contains source history, not database contents, credentials or downloaded references. Follow DISPATCH_GUIDE.md for the workflow and installation. The older handoffs below are historical.
+
+Use an ordinary `git merge --no-edit FETCH_HEAD` to preserve the Windows `bebd501` Inbound video commit when histories diverge. Do not use a fast-forward-only merge for that case, force push, reset or automatic stash. Review local changes before importing. Back up the database and rebuild both API and web, preserving `.env` and volumes. Remote synchronization is confirmed only after a successful authenticated push.
+
 # Material Preparation update — 17 October2026
 
 The preparation expansion is committed after the earlier local Inbound commit `5de065a`, with requested message `Next Phase`. Remote reads currently fail because this cloud session has no usable GitHub credential (Git asks for Username and cannot prompt). The last verified/cached main baseline is `26dca52`; current remote state cannot be reverified from this session. The authorized `git push origin HEAD:main` was attempted and failed: `could not read Username for https://github.com: No such device or address`. This session cannot authenticate to push; synchronization is not confirmed. The verified bundle preserves the full local chain for the Windows handoff.
@@ -7,7 +15,7 @@ If direct push is unavailable, download `GreenInk-Material-Preparation.bundle` t
 ```powershell
 cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
 git fetch "$HOME\Downloads\GreenInk-Material-Preparation.bundle" HEAD
-git merge --ff-only FETCH_HEAD
+git merge --no-edit FETCH_HEAD
 git push origin HEAD:main
 ```
 
@@ -30,7 +38,7 @@ If the cloud write-access denial persists, download `GreenInk-Inbound-Control.bu
 ```powershell
 cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
 git fetch "$HOME\Downloads\GreenInk-Inbound-Control.bundle" HEAD
-git merge --ff-only FETCH_HEAD
+git merge --no-edit FETCH_HEAD
 git push origin HEAD:main
 ```
 
@@ -55,7 +63,7 @@ On the Windows PC, download the bundle to Downloads and run each command separat
 ```powershell
 cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
 git fetch "$HOME\Downloads\GreenInk-Operations.bundle" HEAD
-git merge --ff-only FETCH_HEAD
+git merge --no-edit FETCH_HEAD
 git push origin HEAD:main
 ```
 
@@ -82,7 +90,7 @@ Fallback import, only if direct push is blocked:
 ```powershell
 cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
 git fetch "$HOME\Downloads\GreenInk-Manufacturing.bundle" HEAD
-git merge --ff-only FETCH_HEAD
+git merge --no-edit FETCH_HEAD
 git push origin HEAD:main
 docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --build
 ```

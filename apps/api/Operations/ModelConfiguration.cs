@@ -9,6 +9,7 @@ public static partial class OperationsModel
         b.Entity<Plant>().HasAlternateKey(x => new { x.TenantId, x.Id });
         ConfigureStaging(b);
         ConfigureManufacturing(b);
+        ConfigureDispatch(b);
         Row<ReceivingPolicy>(b);
         Row<DockStation>(b);
         Row<ReceivingCheck>(b);

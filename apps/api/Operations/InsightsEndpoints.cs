@@ -640,6 +640,11 @@ public static class InsightsEndpoints
                     .Take(200)
                     .ToListAsync(),
                 shipments,
+                shipmentReversals = await Ops.Rows<DispatchReversalLine>(db, s)
+                    .Where(x => shipments.Select(p => p.Id).Contains(x.ShipmentId ?? Guid.Empty))
+                    .OrderBy(x => x.CreatedAt)
+                    .Take(200)
+                    .ToListAsync(),
                 deliveries,
                 customers = await Ops.Rows<Partner>(db, s)
                     .AsNoTracking()
@@ -714,6 +719,7 @@ public static class InsightsEndpoints
         ).ToListAsync();
         var shipped = await (
             from c in Ops.Rows<Shipment>(db, s)
+                .Where(x => !Ops.Rows<DispatchReversalLine>(db, s).Any(r => r.ShipmentId == x.Id))
             join pl in Ops.Rows<Pallet>(db, s) on c.PalletId equals pl.Id
             join b in Ops.Rows<Batch>(db, s) on pl.BatchId equals b.Id
             join m in Ops.Rows<Material>(db, s) on b.MaterialId equals m.Id

@@ -84,6 +84,10 @@ public class FactoryDb(DbContextOptions<FactoryDb> options) : DbContext(options)
                             or QualityTestReading
                             or FinishedPack
                             or ManufacturingCommand
+                            or DispatchEvent
+                            or DispatchCommand
+                            or DispatchIssueLine
+                            or DispatchReversalLine
                     && e.State is EntityState.Modified or EntityState.Deleted
                 )
         )
