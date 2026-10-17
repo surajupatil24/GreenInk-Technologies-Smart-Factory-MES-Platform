@@ -75,6 +75,21 @@ public class FactoryDb(DbContextOptions<FactoryDb> options) : DbContext(options)
             throw new InvalidOperationException(
                 "Stock ledger entries are immutable. Post a correction movement instead."
             );
+        if (
+            ChangeTracker
+                .Entries()
+                .Any(e =>
+                    e.Entity
+                        is ProductionEvent
+                            or QualityTestReading
+                            or FinishedPack
+                            or ManufacturingCommand
+                    && e.State is EntityState.Modified or EntityState.Deleted
+                )
+        )
+            throw new InvalidOperationException(
+                "Manufacturing evidence and posting history are append-only."
+            );
         return base.SaveChangesAsync(cancellationToken);
     }
 

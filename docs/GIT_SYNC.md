@@ -70,3 +70,21 @@ Keep `.env` and the database volume. Never append `--volumes` to a shutdown as p
 ## Latest verified baseline and BOM guidance update
 
 The user successfully pushed the operational update and final preference commit; GitHub main was directly verified at `94ec56e`. The older HTTP403/main-baseline description above records the earlier handoff, not the latest confirmed remote state. The saved-BOM guidance fix is prepared on top of `94ec56e` with message `Next Phase`. If cloud push is rejected, download `GreenInk-BOM-Guidance.bundle` to Downloads and import it with the same fetch/fast-forward/push procedure, substituting that filename. It contains only the newer commit chain. Both API and web need rebuilding; there is no additional database migration.
+
+## Manufacturing phase — 17 October 2026
+
+The phase uses the requested commit message **Next Phase**, on `mes-operations`, and includes the previous Inbound and Material Preparation commit chain. Read the current delivery report for the actual push result; remote synchronization must never be inferred from a local commit. Cached `origin/main` is26dca52 and current remote state remains unverified until a successful authenticated Git operation.
+
+The authorized normal push was attempted and rejected by GitHub with **Invalid username or token**. The verified self-contained handoff is **GreenInk-Manufacturing.bundle**, with no prerequisite commit. It contains the entire history, including the Inbound, Material Preparation and manufacturing phases. Reconnect the repository's GitHub write connection to restore direct pushes; never paste access tokens into chat. The local credential helper is configured to use `gh auth git-credential`; a rejected injected credential cannot be repaired by changing application code.
+
+Fallback import, only if direct push is blocked:
+
+```powershell
+cd "D:\GitHub\GreenInk-Technologies-Smart-Factory-MES-Platform"
+git fetch "$HOME\Downloads\GreenInk-Manufacturing.bundle" HEAD
+git merge --ff-only FETCH_HEAD
+git push origin HEAD:main
+docker compose --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --build
+```
+
+Keep private `.env` and database volumes. Both API and web must be rebuilt for the additive manufacturing migration. Do not force push or reset a diverged/local modified branch. MANUFACTURING_GUIDE.md describes the new workflow; MANUFACTURING_REQUIREMENTS.md records the unread manual and full-parity gaps.

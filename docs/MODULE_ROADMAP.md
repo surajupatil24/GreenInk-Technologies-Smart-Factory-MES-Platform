@@ -27,3 +27,8 @@ The connected core across milestones2–7 is implemented and validated with18 Po
 ## Material Preparation coverage update — 17 October2026
 
 The new order-focused local staging workspace now connects scheduled/approved plans, scan-verified stock, separate/combined/pick-only preparation, manual tolerance/correction-factor weighing, kit delivery/issue/return, replenishment, static/open-plan Kanban and reviewed discrepancies. This advances the staging core, not the full172-page reference scope. Use MATERIAL_PREPARATION_REQUIREMENTS.md (MP-01–MP-33) as the current feature inventory and MATERIAL_PREPARATION_GUIDE.md for verified contracts. Grouping/resource calendars, thermal preprocessing, ASRS/AGV, external warehouse/STO/DN, spreadsheets, physical adapters and production hardening remain open. Earlier roadmap statuses describe earlier baselines.
+
+
+## Manufacturing, Quality and Finished Goods coverage update — 17 October 2026
+
+The original execution/lab/finished-stock workspaces now connect versioned SOPs, schedule/reschedule and exclusive resources, linear phases/checklists/manual numeric limits, pause/resume timing, sample handover/testing/retest/review, deviation investigation, gated batch disposition, output batch/expiry, same-batch packing and scan putaway. See MANUFACTURING_REQUIREMENTS.md (PR/QC/FG/X map) and MANUFACTURING_GUIDE.md. Full reference parity remains unverified: the manufacturing PDF exceeds the32MiB transfer limit. Partial completion, dynamic rework/addition/parallel workflows, secondary resources/calendars, advanced packaging/by-products/HUs, COA/LIMS/ERP/DCS/physical printers and production hardening remain open. Existing baseline roadmap entries are historical, not claims that these new slices remain entirely unimplemented.

@@ -161,3 +161,37 @@ Browser and final build results are recorded in the final validation note below.
 
 
 Git handoff: phase committed with message `Next Phase`; normal authorized push attempted and failed because this session cannot read a GitHub Username/credential noninteractively. This differs from the prior session's HTTP403 denial; current remote state is unverified. Prepared and verified `GreenInk-Material-Preparation.bundle`, including the previous Inbound commit and this phase after cached baseline `26dca52`. Use GIT_SYNC.md to import/push with the user's Windows credentials. No force push or claim of remote synchronization.
+
+## Production, Quality and Finished Goods expansion — 17 October 2026
+
+Implemented original execution, laboratory and finished-stock workspaces while retaining the existing order-entry/output, batch-disposition and inventory-record flows in dedicated tabs. The user supplied manufacturing PDF and 18 DAL/project files. All code files were downloaded and method indexes/selected behavioral implementations reviewed; **the PDF exceeds the32MiB transfer limit and was not readable**. Full manual/vendor parity is not claimed. MANUFACTURING_REQUIREMENTS.md records PR/QC/FG/X coverage and remaining work; MANUFACTURING_GUIDE.md documents the operator sequence and APIs.
+
+Delivered:
+
+- Manager-created resource/maintenance controls; versioned, published immutable SOP revisions with linear phases, instructions, checklists/manual numeric limits and lab gates. Released orders schedule/reschedule with reason/priority/resource, snapshot phases/specification, require issued BOM/engineering approval/safety acknowledgment and enforce exclusive running/paused resource occupancy.
+- Actual phase start/end, reasoned run pause/resume with elapsed paused minutes, stale-evidence protection, out-of-range evidence retained with a blocking deviation, complete-SOP gates on existing final-output API and immutable event/reading history with escaped CSV of displayed events.
+- Versioned numeric/pass-fail quality specifications; in-process and batch samples, ordered handover/receive/testing, snapshotted limits, append-only repeated readings and latest-test evaluation, manager-reviewed Passed/Failed decisions, linked retests preserving failures and investigated root-cause/corrective-action/resolution cases. New batch samples/deviations hold stock. Existing direct batch-disposition API enforces latest passed laboratory evidence/open-case gates; laboratory pass/case closure never silently releases stock.
+- Optional controlled finished batch number/future expiry on whole-order output; released/unexpired/free-stock scan-verified same-batch packing into a new pallet, exact source decrease/target increase with immutable paired movements, retained pack breakdown/reference, QR/browser label preview and scan-verified whole-pallet putaway. No physical packaging consumption, printer or external transaction is simulated.
+- Original responsive light/dark execution desk, lab queue/test cards/timeline, deviation review, SOP/specification editors and finished-pallet cards. Lists/counts expose their bounded recent-record scope; no mixed-UOM aggregate or invented OEE.
+
+Additive migration **20261017144443_ManufacturingExecution** creates11 scoped tables with composite FKs, unique/check constraints, JSON snapshots, xmin and append-only database triggers for ProductionEvent/QualityTestReading/FinishedPack/ManufacturingCommand. Existing stock, preparation credits, orders, account/session and ledger rows are preserved. New final-output command signatures prevent changed-input replay while older historical confirmations remain compatible.
+
+### Executed validation
+
+| Check | Result |
+|---|---|
+| `python /tmp/run_greenink.py test` (wrapper for `dotnet test tests/GreenInk.Api.Tests.csproj --configuration Release`, real PostgreSQL) | **37 passed,0 failed,0 skipped**,45s; clean Release compilation |
+| New manufacturing API/database tests | Seven tests cover evidence/lab/predecessor and final-output gates; failed tests/corrections/retests; preserved recipe/test snapshots; role/scope/composite-FK denial; concurrent resource starts and packing; held/expired/scan/retry checks; same-batch stock/ledger conservation; actual EF/raw-SQL append-only protection; populated previous-schema downgrade/re-upgrade preservation |
+| `npm --prefix apps/web run build` | TypeScript/Vite production build passed |
+| `python /tmp/run_greenink.py browser` (wrapper for `npm run test:e2e`, system Chromium/API5081/PostgreSQL) | **5 passed**,37.2s: foundation, Inbound, existing raw-to-dispatch lifecycle, Material Preparation and new guided manufacturing/lab/finished packing |
+| New browser workflow | Real UI-created specification/resource/two-phase SOP/publications/run, safety/evidence, in-process test/review, final batch/expiry/output, finished-batch test/disposition,7kg packed pallet plus3kg source remainder, correct bin and released status, valid QR preview;390px dark/mobile layouts without horizontal overflow |
+| Visual review | Production, Quality and Finished Goods desktop screenshots plus finished/production mobile views inspected; Green Ink branding retained |
+| Native readiness | `/health/ready` HTTP200 against isolated development PostgreSQL; no Windows/production database accessed |
+| `git diff --check` | Passed |
+
+An initial browser run immediately after restarting the native API encountered a transient login proxy500 before readiness. After checking readiness, the final complete five-test run passed. Earlier intermediate runs caught and corrected a dialog label locator and the test's mobile navigation setup; only final results above establish the recorded verification. Test data is explicitly validation data; credentials, screenshots, dependencies, reference files and native runtime files are outside tracked source.
+
+**Remaining:** unread manufacturing manual and full reference comparison; arbitrary/parallel/dynamic phases, phase-specific additions/consumption, partial production/final technical confirmation, rework/premix/maturation/linked filling, secondary resources/shift calendars/man-machine booking, automated/frequency CCP capture, COA/customer/sample-label/image workflows, LIMS/SAP/DCS/OPC, by-products/rolls/multi-batch HUs/mass putaway/physical packaging consumption and certified printers. Full Docker/API-image build was not repeated because the previously observed Microsoft registry CDN restriction remains; Docker Desktop rebuild/UAT/production release checks are still required. No deployment or remote CI execution is claimed.
+
+
+Git delivery: committed with the requested `Next Phase` message. Authorized normal push to `origin HEAD:main` was attempted and rejected by GitHub: **Invalid username or token**. Remote synchronization remains unverified. A self-contained verified `GreenInk-Manufacturing.bundle` preserves the entire commit history, including prior Inbound and Material Preparation work; no credentials/build outputs/reference uploads are included. Reconnect the repository GitHub write connection to enable direct pushes.

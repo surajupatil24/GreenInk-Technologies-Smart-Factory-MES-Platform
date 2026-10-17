@@ -1,3 +1,4 @@
+import { ManufacturingWorkspace } from "./ManufacturingWorkspace";
 import { PreparationWorkspace } from "./PreparationWorkspace";
 import { InboundDesk } from "./InboundDesk";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -308,7 +309,7 @@ const routeResources: Record<string, string[]> = {
   inventory: ["movements"],
   preparation: ["production-orders", "reservations", "consumptions"],
   production: ["production-orders", "confirmations", "downtimes"],
-  quality: ["quality-inspections"],
+  quality: ["quality-inspections", "production-orders"],
   "finished-goods": ["finished-goods"],
   dispatch: ["delivery-orders", "shipments"],
   traceability: [],
@@ -336,13 +337,25 @@ export function Operations({
       <span className="eyebrow">
         {module === "preparation"
           ? "SHOP FLOOR · MATERIAL READINESS"
-          : "PLANT OPERATIONS · FUNCTIONAL CORE"}
+          : module === "production"
+            ? "SHOP FLOOR · PRODUCTION EXECUTION"
+            : module === "quality"
+              ? "QUALITY MANAGEMENT"
+              : module === "finished-goods"
+                ? "WAREHOUSE · FINISHED GOODS"
+                : "PLANT OPERATIONS · FUNCTIONAL CORE"}
       </span>
       <h1>{name}</h1>
       <p className="intro">
         {module === "preparation"
           ? "Plan the shift, prepare every material and deliver with confidence."
-          : "Persisted plant records and controlled transactions. Advanced workflows remain on the product roadmap."}
+          : module === "production"
+            ? "Guide each order through approved instructions, process checks and production output."
+            : module === "quality"
+              ? "Follow samples, investigate deviations and release material with recorded evidence."
+              : module === "finished-goods"
+                ? "Keep finished batches, packed pallets and warehouse locations connected."
+                : "Persisted plant records and controlled transactions. Advanced workflows remain on the product roadmap."}
       </p>
       {!plant && (
         <label className="operation-context">
@@ -974,7 +987,12 @@ function PlantOperations({
         </PreparationWorkspace>
       )}
       {module === "production" && (
-        <>
+        <ManufacturingWorkspace
+          module="production"
+          plantId={plantId}
+          role={role}
+          data={data}
+        >
           <div className="operations-forms">
             {form(
               "Create production order",
@@ -1082,6 +1100,16 @@ function PlantOperations({
                   required: false,
                 },
                 choice("location", "Finished goods bin", bins),
+                {
+                  ...text("batchNumber", "Finished batch number"),
+                  required: false,
+                },
+                {
+                  key: "expiryDate",
+                  label: "Finished expiry date",
+                  type: "date",
+                  required: false,
+                },
               ],
               false,
               undefined,
@@ -1125,10 +1153,15 @@ function PlantOperations({
             "minutes",
             "reason",
           ])}
-        </>
+        </ManufacturingWorkspace>
       )}
       {module === "quality" && (
-        <>
+        <ManufacturingWorkspace
+          module="quality"
+          plantId={plantId}
+          role={role}
+          data={data}
+        >
           <div className="operations-forms">
             {form(
               "Record quality decision",
@@ -1162,10 +1195,15 @@ function PlantOperations({
             "notes",
             "actorId",
           ])}
-        </>
+        </ManufacturingWorkspace>
       )}
       {module === "finished-goods" && (
-        <>
+        <ManufacturingWorkspace
+          module="finished-goods"
+          plantId={plantId}
+          role={role}
+          data={data}
+        >
           {table("finished-goods", "Finished goods inventory", [
             "code",
             "batchNumber",
@@ -1180,7 +1218,7 @@ function PlantOperations({
             Finished goods are created by Production completion. Release their
             batch through Quality before Dispatch.
           </p>
-        </>
+        </ManufacturingWorkspace>
       )}
       {module === "dispatch" && (
         <>

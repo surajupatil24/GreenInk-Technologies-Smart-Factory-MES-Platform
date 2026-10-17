@@ -65,6 +65,18 @@ test("plant lifecycle from raw receipt through production, quality, labels and d
     await expect(
       page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
+    if (name === "Production")
+      await page
+        .getByRole("tab", { name: "Orders & output", exact: true })
+        .click();
+    if (name === "Quality")
+      await page
+        .getByRole("tab", { name: "Batch decisions", exact: true })
+        .click();
+    if (name === "Finished Goods")
+      await page
+        .getByRole("tab", { name: "Inventory records", exact: true })
+        .click();
   }
   await navigate("Inbound");
   await page.getByRole("tab", { name: "Master data" }).click();
