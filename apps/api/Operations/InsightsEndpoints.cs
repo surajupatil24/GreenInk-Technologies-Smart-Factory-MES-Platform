@@ -110,6 +110,8 @@ public static class InsightsEndpoints
                         .AnyAsync(x => x.BatchId == batch.Id && x.Quantity > 0),
                     "The batch has no on-hand stock to inspect."
                 );
+                if (r.Decision == "Released")
+                    await ManufacturingEndpoints.ReleaseGuard(db, s, batch.Id);
                 batch.QualityStatus = r.Decision;
                 var row = Ops.Stamp(
                     new QualityInspection

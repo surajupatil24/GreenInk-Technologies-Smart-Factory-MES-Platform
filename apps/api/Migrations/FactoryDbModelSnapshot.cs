@@ -410,6 +410,70 @@ namespace GreenInk.Api.Migrations
                     b.ToTable("DowntimeEvent");
                 });
 
+            modelBuilder.Entity("GreenInk.FinishedPack", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("LooseQuantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("OutputPalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PackCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PackSize")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("PackagingReference")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("SourcePalletId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "OutputPalletId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "SourcePalletId");
+
+                    b.ToTable("FinishedPack", t =>
+                        {
+                            t.HasCheckConstraint("CK_FinishedPack_Quantity", "\"PackSize\" > 0 AND \"PackCount\" >= 0 AND \"LooseQuantity\" >= 0 AND \"LooseQuantity\" < \"PackSize\" AND \"Quantity\" > 0 AND \"Quantity\" = \"PackSize\" * \"PackCount\" + \"LooseQuantity\"");
+                        });
+                });
+
             modelBuilder.Entity("GreenInk.GoodsReceipt", b =>
                 {
                     b.Property<Guid>("Id")
@@ -663,6 +727,55 @@ namespace GreenInk.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("LabelTemplate");
+                });
+
+            modelBuilder.Entity("GreenInk.ManufacturingCommand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ResultId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CommandId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.ToTable("ManufacturingCommand");
                 });
 
             modelBuilder.Entity("GreenInk.Material", b =>
@@ -983,6 +1096,54 @@ namespace GreenInk.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GreenInk.ProductionEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("character varying(16000)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductionRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionRunId");
+
+                    b.ToTable("ProductionEvent");
+                });
+
             modelBuilder.Entity("GreenInk.ProductionOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1037,6 +1198,275 @@ namespace GreenInk.Api.Migrations
                     b.ToTable("ProductionOrder", t =>
                         {
                             t.HasCheckConstraint("CK_Production_Quantity", "\"PlannedQuantity\" > 0 AND \"CompletedQuantity\" >= 0 AND \"CompletedQuantity\" <= \"PlannedQuantity\"");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionPhase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChecksJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvidenceJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("ParametersJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductionRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RequiresSample")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionRunId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("ProductionPhase", t =>
+                        {
+                            t.HasCheckConstraint("CK_Phase_State", "\"Sequence\" > 0 AND \"Status\" IN ('Pending','Running','Completed')");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionRecipe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("PhasesJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Precautions")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId");
+
+                    b.HasIndex("TenantId", "PlantId", "Code", "Revision")
+                        .IsUnique();
+
+                    b.ToTable("ProductionRecipe");
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionResource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Maintenance")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.ToTable("ProductionResource");
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("PausedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("PausedMinutes")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Priority")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductionOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductionRecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductionResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("QualitySpecificationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("SafetyConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionOrderId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionRecipeId");
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionResourceId");
+
+                    b.HasIndex("TenantId", "PlantId", "QualitySpecificationId");
+
+                    b.ToTable("ProductionRun", t =>
+                        {
+                            t.HasCheckConstraint("CK_Run_State", "\"Status\" IN ('Scheduled','Running','Paused','Completed') AND \"PausedMinutes\" >= 0");
                         });
                 });
 
@@ -1102,6 +1532,90 @@ namespace GreenInk.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GreenInk.QualityCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CorrectiveAction")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProductionRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("QualitySampleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Resolution")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RootCause")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "BatchId");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionRunId");
+
+                    b.HasIndex("TenantId", "PlantId", "QualitySampleId");
+
+                    b.ToTable("QualityCase", t =>
+                        {
+                            t.HasCheckConstraint("CK_Case_Target", "\"BatchId\" IS NOT NULL OR \"ProductionRunId\" IS NOT NULL");
+                        });
+                });
+
             modelBuilder.Entity("GreenInk.QualityInspection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1154,6 +1668,218 @@ namespace GreenInk.Api.Migrations
                     b.HasIndex("TenantId", "PlantId", "CreatedAt");
 
                     b.ToTable("QualityInspection");
+                });
+
+            modelBuilder.Entity("GreenInk.QualitySample", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("HandedOverAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProductionPhaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("QualitySpecificationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RetestOfId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReviewNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("TestingAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TestsJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "BatchId");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId");
+
+                    b.HasIndex("TenantId", "PlantId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PlantId", "ProductionPhaseId");
+
+                    b.HasIndex("TenantId", "PlantId", "QualitySpecificationId");
+
+                    b.HasIndex("TenantId", "PlantId", "RetestOfId");
+
+                    b.ToTable("QualitySample", t =>
+                        {
+                            t.HasCheckConstraint("CK_Sample_Target", "(\"BatchId\" IS NOT NULL) <> (\"ProductionPhaseId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("GreenInk.QualitySpecification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TestsJson")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("jsonb");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "MaterialId", "Revision")
+                        .IsUnique();
+
+                    b.ToTable("QualitySpecification");
+                });
+
+            modelBuilder.Entity("GreenInk.QualityTestReading", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("InSpec")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<decimal?>("NumericValue")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<bool?>("PassedValue")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PlantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("QualitySampleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TestCode")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "PlantId", "Id");
+
+                    b.HasIndex("TenantId", "PlantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "PlantId", "QualitySampleId");
+
+                    b.ToTable("QualityTestReading", t =>
+                        {
+                            t.HasCheckConstraint("CK_Reading_Value", "(\"NumericValue\" IS NOT NULL) <> (\"PassedValue\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("GreenInk.ReceivingCheck", b =>
@@ -2442,6 +3168,30 @@ namespace GreenInk.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GreenInk.FinishedPack", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "OutputPalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Pallet", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "SourcePalletId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GreenInk.GoodsReceipt", b =>
                 {
                     b.HasOne("GreenInk.Plant", null)
@@ -2514,6 +3264,16 @@ namespace GreenInk.Api.Migrations
                 });
 
             modelBuilder.Entity("GreenInk.LabelTemplate", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.ManufacturingCommand", b =>
                 {
                     b.HasOne("GreenInk.Plant", null)
                         .WithMany()
@@ -2632,6 +3392,23 @@ namespace GreenInk.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GreenInk.ProductionEvent", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionRun", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionRunId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GreenInk.ProductionOrder", b =>
                 {
                     b.HasOne("GreenInk.Plant", null)
@@ -2647,6 +3424,87 @@ namespace GreenInk.Api.Migrations
                         .HasPrincipalKey("TenantId", "PlantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionPhase", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionRun", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionRunId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionRecipe", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionResource", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.ProductionRun", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionOrder", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionOrderId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionRecipe", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionRecipeId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionResource", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionResourceId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.QualitySpecification", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "QualitySpecificationId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("GreenInk.PurchaseOrder", b =>
@@ -2673,6 +3531,34 @@ namespace GreenInk.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GreenInk.QualityCase", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Batch", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "BatchId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GreenInk.ProductionRun", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionRunId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GreenInk.QualitySample", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "QualitySampleId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("GreenInk.QualityInspection", b =>
                 {
                     b.HasOne("GreenInk.Plant", null)
@@ -2685,6 +3571,82 @@ namespace GreenInk.Api.Migrations
                     b.HasOne("GreenInk.Batch", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "PlantId", "BatchId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.QualitySample", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Batch", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "BatchId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.ProductionPhase", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "ProductionPhaseId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GreenInk.QualitySpecification", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "QualitySpecificationId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.QualitySample", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "RetestOfId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GreenInk.QualitySpecification", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.Material", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "MaterialId")
+                        .HasPrincipalKey("TenantId", "PlantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GreenInk.QualityTestReading", b =>
+                {
+                    b.HasOne("GreenInk.Plant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GreenInk.QualitySample", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "PlantId", "QualitySampleId")
                         .HasPrincipalKey("TenantId", "PlantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

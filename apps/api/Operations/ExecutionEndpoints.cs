@@ -31,7 +31,9 @@ public static class ExecutionEndpoints
         decimal Quantity,
         decimal ScrapQuantity,
         string Location,
-        Guid CommandId
+        Guid CommandId,
+        DateTimeOffset? ExpiryDate = null,
+        string? BatchNumber = null
     );
 
     public record DowntimeInput(Guid PlantId, Guid ProductionOrderId, int Minutes, string Reason);
@@ -373,8 +375,18 @@ public static class ExecutionEndpoints
                     "Output must be positive and scrap nonnegative, with at most six decimal places."
                 );
                 var location = Ops.Code(r.Location);
+                var requestedBatch = string.IsNullOrWhiteSpace(r.BatchNumber)
+                    ? null
+                    : Ops.Code(r.BatchNumber);
                 await using var tx = await db.Database.BeginTransactionAsync(
                     IsolationLevel.Serializable
+                );
+                var outputSignature = ManufacturingEndpoints.OutputSignature(id, r);
+                await ManufacturingEndpoints.CheckOutputCommand(
+                    db,
+                    s,
+                    r.CommandId,
+                    outputSignature
                 );
                 var prior = await Ops.Rows<ProductionConfirmation>(db, s)
                     .SingleOrDefaultAsync(x => x.CommandId == r.CommandId);
@@ -382,8 +394,11 @@ public static class ExecutionEndpoints
                 {
                     var movement = await Ops.Rows<StockMovement>(db, s)
                         .SingleAsync(x => x.CommandId == r.CommandId && x.Kind == "Production");
+                    var priorBatch = await Get<Batch>(db, s, prior.BatchId);
                     Ops.Check(
-                        prior.ProductionOrderId == id
+                        priorBatch.ExpiryDate == r.ExpiryDate
+                            && (requestedBatch == null || priorBatch.Number == requestedBatch)
+                            && prior.ProductionOrderId == id
                             && prior.Quantity == r.Quantity
                             && prior.ScrapQuantity == r.ScrapQuantity
                             && movement.ToLocation == location,
@@ -391,6 +406,10 @@ public static class ExecutionEndpoints
                     );
                     return Results.Ok(prior);
                 }
+                Ops.Check(
+                    r.ExpiryDate == null || r.ExpiryDate > DateTimeOffset.UtcNow,
+                    "Finished expiry must be in the future."
+                );
                 var o = await Order(db, s, id);
                 Ops.Check(
                     o.Status == "Released",
@@ -427,11 +446,18 @@ public static class ExecutionEndpoints
                         );
                     }
                 }
+                Ops.Check(
+                    requestedBatch == null
+                        || !await Ops.Rows<Batch>(db, s).AnyAsync(x => x.Number == requestedBatch),
+                    "Finished batch number already exists."
+                );
+                await ManufacturingEndpoints.CompleteGuard(db, s, id);
                 var batch = Ops.Stamp(
                     new Batch
                     {
                         MaterialId = o.MaterialId,
-                        Number = $"FG-{Guid.NewGuid():N}",
+                        Number = requestedBatch ?? $"FG-{Guid.NewGuid():N}",
+                        ExpiryDate = r.ExpiryDate,
                         Kind = "Finished",
                         ProductionOrderId = id,
                         QualityStatus = "Hold",
@@ -459,6 +485,13 @@ public static class ExecutionEndpoints
                         CommandId = r.CommandId,
                     },
                     s
+                );
+                ManufacturingEndpoints.RecordOutputCommand(
+                    db,
+                    s,
+                    r.CommandId,
+                    outputSignature,
+                    row.Id
                 );
                 db.AddRange(batch, pallet, row);
                 db.Add(Move(s, pallet, r.Quantity, "Production", o.Number, r.CommandId));
